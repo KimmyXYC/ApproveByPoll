@@ -37,7 +37,7 @@ async def handle_join_request(bot, request: types.ChatJoinRequest, config):
     )
     vote_question = f"是否允许其入群？/Approve this user?"
     vote_options = ["允许/Yes", "拒绝/No"]
-    vote_message = await bot.send_poll(
+    polling = await bot.send_poll(
         chat_id,
         vote_question,
         vote_options,
@@ -48,7 +48,7 @@ async def handle_join_request(bot, request: types.ChatJoinRequest, config):
     try:
         await bot.pin_chat_message(
             chat_id=chat_id,
-            message_id=vote_message.message_id,
+            message_id=polling.message_id,
             disable_notification=True,
         )
     except Exception as e:
@@ -57,12 +57,12 @@ async def handle_join_request(bot, request: types.ChatJoinRequest, config):
     try:
         await bot.unpin_chat_message(
             chat_id=chat_id,
-            message_id=vote_message.message_id,
+            message_id=polling.message_id,
         )
     except Exception as e:
         logger.error(f"{chat_id}:{e}")
     try:
-        vote_message = await bot.stop_poll(request.chat.id, vote_message.message_id)
+        vote_message = await bot.stop_poll(request.chat.id, polling.message_id)
 
         allow_count = vote_message.options[0].voter_count
         deny_count = vote_message.options[1].voter_count
@@ -92,7 +92,7 @@ async def handle_join_request(bot, request: types.ChatJoinRequest, config):
     await asyncio.sleep(60)
     try:
         await bot.delete_message(chat_id=request.chat.id, message_id=message.message_id)
-        await bot.delete_message(chat_id=request.chat.id, message_id=vote_message.message_id)
-        await bot.delete_message(chat_id=user_id, message_id=result_message.message_id)
+        await bot.delete_message(chat_id=request.chat.id, message_id=polling.message_id)
+        await bot.delete_message(chat_id=request.chat.id, message_id=result_message.message_id)
     except Exception as e:
         logger.error(f"User_id:{user_id}/Chat_id:{chat_id}: {e}")
