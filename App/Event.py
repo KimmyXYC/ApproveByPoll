@@ -25,9 +25,11 @@ async def handle_join_request(bot, request: types.ChatJoinRequest, config):
     logger.info(f"New join request from {username}(ID: {user_id}) in {chat_id}")
     _zh_info = f"您正在申请加入「{request.chat.title}」，结果将于5分钟后告知您。"
     _en_info = f"You are applying to join 「{request.chat.title}」. The result will be communicated to you in 5 minutes."
+    _info = f"由于 Telegram 的限制，请按下 /start 以便机器人发送申请结果。\n" \
+            f"Due to Telegram's restrictions, please press /start so that the bot can send the application result."
     user_message = await bot.send_message(
         user_id,
-        f"{_zh_info}\n{_en_info}",
+        f"{_zh_info}\n{_en_info}\n\n{_info}",
     )
     message = await bot.send_message(
         chat_id,
@@ -43,7 +45,22 @@ async def handle_join_request(bot, request: types.ChatJoinRequest, config):
         allows_multiple_answers=False,
         reply_to_message_id=message.message_id,
     )
+    try:
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=vote_message.message_id,
+            disable_notification=True,
+        )
+    except Exception as e:
+        logger.error(f"{chat_id}:{e}")
     await asyncio.sleep(300)
+    try:
+        await bot.unpin_chat_message(
+            chat_id=chat_id,
+            message_id=vote_message.message_id,
+        )
+    except Exception as e:
+        logger.error(f"{chat_id}:{e}")
     try:
         vote_message = await bot.stop_poll(request.chat.id, vote_message.message_id)
 
@@ -52,23 +69,30 @@ async def handle_join_request(bot, request: types.ChatJoinRequest, config):
 
         if vote_message.total_voter_count == 0:
             logger.info(f"{user_id}: No one voted in {chat_id}")
-            await message.reply("无人投票。\nNo one voted.")
-            await user_message.reply("无人投票，请稍后尝试重新申请。\nNo one voted. Please request again later.")
+            result_message = await message.reply("无人投票。\nNo one voted.")
             await request.decline()
+            await user_message.reply("无人投票，请稍后尝试重新申请。\nNo one voted. Please request again later.")
         elif allow_count > deny_count:
             logger.info(f"{user_id}: Approved {user_id} in {chat_id}")
-            await message.reply("通过。\nApproved.")
-            await user_message.reply("您已获批准加入\nYou have been approved.")
+            result_message = await message.reply("通过。\nApproved.")
             await request.approve()
+            await user_message.reply("您已获批准加入\nYou have been approved.")
         elif allow_count == deny_count:
             logger.info(f"{user_id}: Tie in {chat_id}")
-            await message.reply("平票。\nTie.")
-            await user_message.reply("平票，请稍后尝试重新申请。\nTie. Please request again later.")
+            result_message = await message.reply("平票。\nTie.")
             await request.decline()
+            await user_message.reply("平票，请稍后尝试重新申请。\nTie. Please request again later.")
         else:
             logger.info(f"{user_id}: Denied {user_id} in {chat_id}")
-            await message.reply("拒绝。\nDenied.")
-            await user_message.reply("您的申请已被拒绝。\nYou have been denied.")
+            result_message = await message.reply("拒绝。\nDenied.")
             await request.decline()
+            await user_message.reply("您的申请已被拒绝。\nYou have been denied.")
     except Exception as e:
-        logger.error(f"{user_id}/{chat_id}: {e}")
+        logger.error(f"User_id:{user_id}/Chat_id:{chat_id}: {e}")
+    await asyncio.sleep(60)
+    try:
+        await bot.delete_message(chat_id=request.chat.id, message_id=message.message_id)
+        await bot.delete_message(chat_id=request.chat.id, message_id=vote_message.message_id)
+        await bot.delete_message(chat_id=user_id, message_id=result_message.message_id)
+    except Exception as e:
+        logger.error(f"User_id:{user_id}/Chat_id:{chat_id}: {e}")

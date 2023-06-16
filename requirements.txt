@@ -1,3 +1,4 @@
 rtoml
 loguru
 aiogram
+aiohttp_socks
