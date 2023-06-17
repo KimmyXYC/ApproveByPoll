@@ -21,19 +21,26 @@ async def start(bot, message: types.Message, config):
 async def handle_join_request(bot, request: types.ChatJoinRequest, config):
     chat_id = request.chat.id
     user_id = request.from_user.id
-    username = request.from_user.first_name
+    if request.from_user.username:
+        username = f"@{request.from_user.username}"
+    else:
+        username = request.from_user.first_name
     logger.info(f"New join request from {username}(ID: {user_id}) in {chat_id}")
     _zh_info = f"您正在申请加入「{request.chat.title}」，结果将于5分钟后告知您。"
     _en_info = f"You are applying to join 「{request.chat.title}」. The result will be communicated to you in 5 minutes."
-    _info = f"由于 Telegram 的限制，请按下 /start 以便机器人发送申请结果。\n" \
-            f"Due to Telegram's restrictions, please press /start so that the bot can send the application result."
+    _info = f"由于 Telegram 的限制，首次使用请按下 /start 以便机器人发送申请结果。\n" \
+            f"Due to limitations imposed by Telegram, please press /start for the first time to allow the bot to send the application result."
     user_message = await bot.send_message(
         user_id,
         f"{_zh_info}\n{_en_info}\n\n{_info}",
     )
+    markup = types.InlineKeyboardMarkup()
+    button = types.InlineKeyboardButton(text="See the Applicant", url=f"tg://openmessage?user_id={user_id}")
+    markup.add(button)
     message = await bot.send_message(
         chat_id,
         f"{username}(ID: {user_id})申请入群。\n{username}(ID: {user_id}) is requesting to join this group.",
+        reply_markup=markup,
     )
     vote_question = f"是否允许其入群？/Approve this user?"
     vote_options = ["允许/Yes", "拒绝/No"]
