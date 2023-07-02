@@ -11,7 +11,7 @@ from utils.Tool import calculate_md5
 
 async def start(bot, message: types.Message, config):
     _url = "https://github.com/KimmyXYC/ApproveByPoll"
-    _zh_info = f"这是一个用于投票加群的机器人。\n机器人必须拥有邀请，封禁，发起投票权限。"
+    _zh_info = f"这是一个用于投票加群的机器人。\n机器人必须拥有邀请，封禁，发起投票的权限。"
     _en_info = f"This is a Bot for voting to join the group.\nBot must have invite, ban and poll permissions."
     await message.reply(
         f"{_zh_info}\n{_en_info}\n\nOpen-source repository: {_url}",
@@ -124,28 +124,28 @@ class JoinRequest:
                     result_message = await notice_message.reply("无人投票。\nNo one voted.")
                     await request.decline()
                     edit_msg = f"{user_mention}(ID: {user_id}) 无人投票。" \
-                               f"\n{user_mention}(ID: {user_id}) No one voted."
+                               f"\n{user_mention}(ID: {user_id}): No one voted."
                     reply_msg = "无人投票，请稍后尝试重新申请。\nNo one voted. Please request again later."
                 elif allow_count > deny_count:
                     logger.info(f"{user_id}: Approved {user_id} in {chat_id}")
                     result_message = await notice_message.reply("通过。\nApproved.")
                     await request.approve()
                     edit_msg = f"{user_mention}(ID: {user_id}) 已通过。" \
-                               f"\n{user_mention}(ID: {user_id}) Approved."
+                               f"\n{user_mention}(ID: {user_id}): Approved."
                     reply_msg = "您已获批准加入\nYou have been approved."
                 elif allow_count == deny_count:
                     logger.info(f"{user_id}: Tie in {chat_id}")
                     result_message = await notice_message.reply("平票。\nTie.")
                     await request.decline()
                     edit_msg = f"{user_mention}(ID: {user_id}) 平票。" \
-                               f"\n{user_mention}(ID: {user_id}) Tie."
+                               f"\n{user_mention}(ID: {user_id}): Tie."
                     reply_msg = "平票，请稍后尝试重新申请。\nTie. Please request again later."
                 else:
                     logger.info(f"{user_id}: Denied {user_id} in {chat_id}")
                     result_message = await notice_message.reply("拒绝。\nDenied.")
                     await request.decline()
                     edit_msg = f"{user_mention}(ID: {user_id}) 已拒绝。" \
-                               f"\n{user_mention}(ID: {user_id}) Denied."
+                               f"\n{user_mention}(ID: {user_id}): Denied."
                     reply_msg = "您的申请已被拒绝。\nYou have been denied."
             except Exception as e:
                 logger.error(f"User_id:{user_id} in Chat_id:{chat_id}: {e}")
@@ -177,14 +177,14 @@ class JoinRequest:
                 await self.request.approve()
                 await bot.answer_callback_query(callback_query.id, "已通过。Approved.")
                 edit_msg = f"{self.user_mention}(ID: {self.user_id})的申请已被批准。\n" \
-                           f"{self.user_mention}(ID: {self.user_id})'s request has been approved by {callback_query.from_user.mention}"
+                           f"{self.user_mention}(ID: {self.user_id}): Approved by {callback_query.from_user.mention}"
                 reply_msg = "您已获批准加入\nYou have been approved."
                 self.finished = True
             elif action == "reject":
                 await self.request.decline()
                 await bot.answer_callback_query(callback_query.id, "已拒绝。Denied.")
                 edit_msg = f"{self.user_mention}(ID: {self.user_id})的申请已被拒绝。\n" \
-                           f"{self.user_mention}(ID: {self.user_id})'s request has been denied by {callback_query.from_user.mention}"
+                           f"{self.user_mention}(ID: {self.user_id}): Denied by {callback_query.from_user.mention}"
                 reply_msg = "您的申请已被拒绝。\nYou have been denied."
                 self.finished = True
             elif action == "ban":
@@ -196,14 +196,14 @@ class JoinRequest:
                         await bot.kick_chat_member(self.chat_id, self.user_id)
                         await bot.answer_callback_query(callback_query.id, "已封禁。Banned.")
                         edit_msg = f"{self.user_mention}(ID: {self.user_id})已被封禁。\n" \
-                                   f"{self.user_mention}(ID: {self.user_id}) has been banned by {callback_query.from_user.mention}"
+                                   f"{self.user_mention}(ID: {self.user_id}): Banned by {callback_query.from_user.mention}"
                         reply_msg = "您已被封禁。\nYou have been banned."
                         self.finished = True
                     else:
                         await self.request.decline()
                         await bot.answer_callback_query(callback_query.id, "机器人无权限封禁。Bot has no permission to ban.")
                         edit_msg = f"{self.user_mention}(ID: {self.user_id})的申请已被拒绝。\n" \
-                                   f"{self.user_mention}(ID: {self.user_id})'s request has been denied by {callback_query.from_user.mention}"
+                                   f"{self.user_mention}(ID: {self.user_id}): Denied by {callback_query.from_user.mention}"
                         reply_msg = "您的申请已被拒绝。\nYou have been denied."
                         self.finished = True
                 else:
