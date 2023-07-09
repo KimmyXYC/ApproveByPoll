@@ -12,9 +12,10 @@ from utils.Tool import calculate_md5
 
 
 class BotRunner(object):
-    def __init__(self, config):
+    def __init__(self, config, db):
         self.bot = config.bot
         self.proxy = config.proxy
+        self.db = db
         self.request_tasks = {}
 
     def run(self):
@@ -32,16 +33,23 @@ class BotRunner(object):
         async def handle_command(message: types.Message):
             await Event.start(bot, message)
 
+        @dp.message_handler(commands=["pin_vote_msg"])
+        async def handle_command_pin_msg(message: types.Message):
+            if message.chat.type in ["group", "supergroup"]:
+                await Event.set_pin_message(bot, message, self.db)
+            else:
+                await message.reply("Please use this command in a group.")
+
         @dp.message_handler(content_types=types.ContentTypes.PINNED_MESSAGE)
         async def delete_pinned_message(message: types.Message):
-            await Event.delete_pinned_message(bot, message)
+            await Event.delete_pinned_message(bot, message, self.db)
 
         @dp.chat_join_request_handler()
         async def handle_new_chat_members(request: types.ChatJoinRequest):
             join_request_id = calculate_md5(f"{request.chat.id}@{request.from_user.id}")
             request_task = Event.JoinRequest(request.chat.id, request.from_user.id)
             self.request_tasks[join_request_id] = request_task
-            await request_task.handle_join_request(bot, request, _config)
+            await request_task.handle_join_request(bot, request, _config, self.db)
 
         @dp.callback_query_handler(lambda c: True)
         async def handle_callback_query(callback_query: types.CallbackQuery):

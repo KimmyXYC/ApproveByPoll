@@ -18,14 +18,36 @@ async def start(bot, message: types.Message):
     )
 
 
-async def delete_pinned_message(bot, message: types.Message):
+async def set_pin_message(bot, message: types.Message, db):
     bot_user = await bot.get_me()
     bot_member = await bot.get_chat_member(message.chat.id, bot_user.id)
-    if bot_member.status == 'administrator' and bot_member.can_delete_messages:
-        try:
-            await message.delete()
-        except Exception as e:
-            logger.error(f"Delete pinned message failed: {e}")
+    if bot_member.status == 'administrator' and bot_member.can_pin_messages:
+        chat_member = await bot.get_chat_member(message.chat.id, message.from_user.id)
+        if (chat_member.status == 'administrator' and chat_member.can_pin_messages) or chat_member.status == 'creator':
+            command_args = message.text.split()
+            if len(command_args) == 1:
+                await message.reply("Malformed, expected /pin_vote_msg [On/Off]")
+            elif len(command_args) == 2:
+                if command_args[1] == "On" or command_args[1] == "on":
+                    await message.reply("Enable poll message pinning")
+                    db.set(str(message.chat.id), {"pin_msg": True})
+                elif command_args[1] == "Off" or command_args[1] == "off":
+                    await message.reply("Disable poll message pinning")
+                    db.set(str(message.chat.id), {"pin_msg": False})
+                else:
+                    await message.reply("Malformed, expected /pin_vote_msg [On/Off]")
+            else:
+                await message.reply("Malformed, expected /pin_vote_msg [On/Off]")
+
+
+async def delete_pinned_message(bot, message: types.Message, db):
+    status = db.get(str(message.chat.id))
+    if status:
+        if status["pin_msg"]:
+            try:
+                await message.delete()
+            except Exception as e:
+                logger.error(f"Delete pinned message failed: {e}")
 
 
 class JoinRequest:
@@ -41,7 +63,7 @@ class JoinRequest:
         self.notice_message = None
         self.polling = None
 
-    async def handle_join_request(self, bot, request: types.ChatJoinRequest, config):
+    async def handle_join_request(self, bot, request: types.ChatJoinRequest, config, db):
         self.request = request
 
         bot_user = await bot.get_me()
@@ -84,8 +106,13 @@ class JoinRequest:
             allows_multiple_answers=False,
             reply_to_message_id=notice_message.message_id,
         )
+        status = db.get(str(self.chat_id))
+        if status:
+            status_pin_msg = status["pin_msg"]
+        else:
+            status_pin_msg = False
 
-        if self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
+        if status_pin_msg and self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
             await bot.pin_chat_message(
                 chat_id=self.chat_id,
                 message_id=self.polling.message_id,
@@ -96,7 +123,7 @@ class JoinRequest:
 
         if self.finished:
             return
-        if self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
+        if status_pin_msg and self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
             await bot.unpin_chat_message(
                 chat_id=self.chat_id,
                 message_id=self.polling.message_id,
