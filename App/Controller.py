@@ -30,7 +30,7 @@ class BotRunner(object):
 
         @dp.message_handler(commands=["start", "help"], chat_type=types.ChatType.PRIVATE)
         async def handle_command(message: types.Message):
-            await Event.start(bot, message, _config)
+            await Event.start(bot, message)
 
         @dp.message_handler(content_types=types.ContentTypes.PINNED_MESSAGE)
         async def delete_pinned_message(message: types.Message):
@@ -39,7 +39,7 @@ class BotRunner(object):
         @dp.chat_join_request_handler()
         async def handle_new_chat_members(request: types.ChatJoinRequest):
             join_request_id = calculate_md5(f"{request.chat.id}@{request.from_user.id}")
-            request_task = Event.JoinRequest()
+            request_task = Event.JoinRequest(request.chat.id, request.from_user.id)
             self.request_tasks[join_request_id] = request_task
             await request_task.handle_join_request(bot, request, _config)
 
@@ -49,13 +49,6 @@ class BotRunner(object):
             join_request_id = callback_query.data.split("/")[1]
 
             request_task = self.request_tasks.get(join_request_id)
-            if action == "approve":
-                await request_task.handle_button(bot, callback_query, "approve")
-            elif action == "reject":
-                await request_task.handle_button(bot, callback_query, "reject")
-            elif action == "ban":
-                await request_task.handle_button(bot, callback_query, "ban")
-            else:
-                logger.error(f"Unknown action: {action}")
+            await request_task.handle_button(bot, callback_query, action)
 
         asyncio.run(dp.start_polling())
