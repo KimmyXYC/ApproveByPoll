@@ -91,7 +91,7 @@ class JoinRequest:
         notice_message = await bot.send_message(
             self.chat_id,
             f"{request.from_user.mention}(ID: {self.user_id}) is requesting to join this group."
-            f"\n\n tg://user?id={self.user_id}",
+            f"\n\ntg://user?id={self.user_id}",
             reply_markup=keyboard
         )
         self.notice_message = notice_message
