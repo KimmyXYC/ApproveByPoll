@@ -18,9 +18,8 @@ async def start(bot, message: types.Message):
     )
 
 
-async def set_pin_message(bot, message: types.Message, db):
-    bot_user = await bot.get_me()
-    bot_member = await bot.get_chat_member(message.chat.id, bot_user.id)
+async def set_pin_message(bot, message: types.Message, db, bot_id):
+    bot_member = await bot.get_chat_member(message.chat.id, bot_id)
     if bot_member.status == 'administrator' and bot_member.can_pin_messages:
         chat_member = await bot.get_chat_member(message.chat.id, message.from_user.id)
         if (chat_member.status == 'administrator' and chat_member.can_pin_messages) or chat_member.status == 'creator':
@@ -51,11 +50,12 @@ async def delete_pinned_message(bot, message: types.Message, db):
 
 
 class JoinRequest:
-    def __init__(self, chat_id, user_id):
+    def __init__(self, chat_id, user_id, bot_id):
         self.chat_id = chat_id
         self.user_id = user_id
         self.finished = False
 
+        self.bot_id = bot_id
         self.bot_member = None
 
         self.request = None
@@ -66,8 +66,7 @@ class JoinRequest:
     async def handle_join_request(self, bot, request: types.ChatJoinRequest, config, db):
         self.request = request
 
-        bot_user = await bot.get_me()
-        self.bot_member = await bot.get_chat_member(self.chat_id, bot_user.id)
+        self.bot_member = await bot.get_chat_member(self.chat_id, self.bot_id)
         logger.info(f"New join request from {request.from_user.mention}(ID: {self.user_id}) in {self.chat_id}")
 
         _zh_info = f"您正在申请加入「{request.chat.title}」，结果将于5分钟后告知您。"

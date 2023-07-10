@@ -17,6 +17,7 @@ class BotRunner(object):
         self.proxy = config.proxy
         self.db = db
         self.request_tasks = {}
+        self.bot_id = self.bot.botToken.split(":")[0]
 
     def run(self):
         logger.success("Bot Start")
@@ -36,7 +37,7 @@ class BotRunner(object):
         @dp.message_handler(commands=["pin_vote_msg"])
         async def handle_command_pin_msg(message: types.Message):
             if message.chat.type in ["group", "supergroup"]:
-                await Event.set_pin_message(bot, message, self.db)
+                await Event.set_pin_message(bot, message, self.db, self.bot_id)
             else:
                 await message.reply("Please use this command in a group.")
 
@@ -47,7 +48,7 @@ class BotRunner(object):
         @dp.chat_join_request_handler()
         async def handle_new_chat_members(request: types.ChatJoinRequest):
             join_request_id = calculate_md5(f"{request.chat.id}@{request.from_user.id}")
-            request_task = Event.JoinRequest(request.chat.id, request.from_user.id)
+            request_task = Event.JoinRequest(request.chat.id, request.from_user.id, self.bot_id)
             self.request_tasks[join_request_id] = request_task
             await request_task.handle_join_request(bot, request, _config, self.db)
 
