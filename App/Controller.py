@@ -39,7 +39,7 @@ class BotRunner(object):
             if message.chat.type in ["group", "supergroup"]:
                 await Event.set_pin_message(bot, message, self.db, self.bot_id)
             else:
-                await message.reply("Please use this command in a group.")
+                await message.reply("Please use this command in the group.")
 
         @dp.message_handler(content_types=types.ContentTypes.PINNED_MESSAGE)
         async def delete_pinned_message(message: types.Message):
