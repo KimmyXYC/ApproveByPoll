@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# @Time： 2023/7/2 20:48 
+# @Time: 2023/7/2 20:48
 # @FileName: Tool.py
-# @Software： PyCharm
+# @Software: PyCharm
 # @GitHub: KimmyXYC
 import hashlib
 

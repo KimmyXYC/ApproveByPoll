@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# @Time： 2023/6/16 17:46
+# @Time: 2023/6/16 17:46
 # @FileName: Controller.py
-# @Software： PyCharm
+# @Software: PyCharm
 # @GitHub: KimmyXYC
 import asyncio
 from App import Event
