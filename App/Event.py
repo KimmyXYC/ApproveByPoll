@@ -363,7 +363,8 @@ class Ostracism:
             await bot.answer_callback_query(callback_query.id, "You have no permission to do this.")
             return
         if action == "Approve":
-            if callback_query.from_user.id == self.user_id:
+            if callback_query.from_user.id == self.user_id \
+                    and (chat_member.status != 'administrator' or chat_member.status != 'creator'):
                 await bot.answer_callback_query(callback_query.id, "You cannot approve your own request.")
                 return
             self.admin_status = True
