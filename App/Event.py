@@ -358,10 +358,13 @@ class Ostracism:
 
     async def handle_button(self, bot, callback_query: types.CallbackQuery, action, db):
         chat_member = await bot.get_chat_member(self.chat_id, callback_query.from_user.id)
-        if not ((chat_member.status == 'administrator' and chat_member.can_restrict_members) or
-                chat_member.status == 'creator') or (callback_query.from_user.id != self.user_id):
-            await bot.answer_callback_query(callback_query.id, "You have no permission to do this.")
-            return
+        logger.info(f"User_id:{callback_query.from_user.id} in Chat_id:{self.chat_id} want to {action} "
+                    f"Ostracism ID:{self.target_id} and user_id is {self.user_id}")
+        if not callback_query.from_user.id == self.user_id:
+            if not ((chat_member.status == 'administrator' and chat_member.can_restrict_members) or
+                    chat_member.status == 'creator'):
+                await bot.answer_callback_query(callback_query.id, "You have no permission to do this.")
+                return
         if action == "Approve":
             if callback_query.from_user.id == self.user_id \
                     and (chat_member.status != 'administrator' or chat_member.status != 'creator'):
