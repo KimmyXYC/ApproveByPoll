@@ -178,8 +178,8 @@ class JoinRequest:
             allows_multiple_answers=False,
             reply_to_message_id=notice_message.message_id,
         )
-        status = db.get(str(self.chat_id))
-        status_pin_msg = status.get("pin_msg", False)
+        chat_dict = db.get(str(self.chat_id))
+        status_pin_msg = chat_dict.get("pin_msg", False)
 
         if status_pin_msg and self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
             await bot.pin_chat_message(
@@ -188,7 +188,6 @@ class JoinRequest:
                 disable_notification=True,
             )
 
-        chat_dict = db.get(str(self.chat_id))
         vote_time = chat_dict.get("vote_time", 600)
         await asyncio.sleep(vote_time)
 
@@ -320,8 +319,11 @@ class Ostracism:
         self.ostracism_id = None
         self.target_member = None
         self.polling = None
+        self.bot_member = None
+        self.cancelled = False
 
     async def start_ostracism(self, bot, message):
+        self.bot_member = await bot.get_chat_member(self.chat_id, self.bot_id)
         try:
             self.target_member = await bot.get_chat_member(self.chat_id, self.target_id)
         except Exception as e:
@@ -357,10 +359,13 @@ class Ostracism:
     async def handle_button(self, bot, callback_query: types.CallbackQuery, action, db):
         chat_member = await bot.get_chat_member(self.chat_id, callback_query.from_user.id)
         if not ((chat_member.status == 'administrator' and chat_member.can_restrict_members) or
-                chat_member.status == 'creator'):
+                chat_member.status == 'creator') or (callback_query.from_user.id == self.user_id):
             await bot.answer_callback_query(callback_query.id, "You have no permission to do this.")
             return
         if action == "Approve":
+            if callback_query.from_user.id == self.user_id:
+                await bot.answer_callback_query(callback_query.id, "You cannot approve your own request.")
+                return
             self.admin_status = True
         elif action == "Cancel":
             self.admin_status = True
@@ -368,6 +373,7 @@ class Ostracism:
             await self.start_msg.edit_text(f"Ostracism was canceled by {callback_query.from_user.mention}.")
             return
         elif action == "CancelKill":
+            self.cancelled = True
             await bot.answer_callback_query(callback_query.id, "Canceled.")
             await self.start_msg.edit_text(
                 f"Ostracism voting to user {self.target_member.user.mention} was canceled"
@@ -386,10 +392,10 @@ class Ostracism:
         )
         keyboard.add(cancel_button)
         await self.start_msg.edit_text(
-            f"start Ostracism voting to user {self.target_member.user.mention}.",
+            f"Start Ostracism voting to user {self.target_member.user.mention}.",
             reply_markup=keyboard
         )
-        vote_question = "Ostracism this user?"
+        vote_question = "Kick out this user?"
         vote_options = ["Yes", "No"]
         self.polling = await bot.send_poll(
             self.chat_id,
@@ -401,8 +407,24 @@ class Ostracism:
         )
 
         chat_dict = db.get(str(self.chat_id))
+        status_pin_msg = chat_dict.get("pin_msg", False)
+
+        if status_pin_msg and self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
+            await bot.pin_chat_message(
+                chat_id=self.chat_id,
+                message_id=self.polling.message_id,
+                disable_notification=True,
+            )
+
         vote_time = chat_dict.get("vote_time", 600)
         await asyncio.sleep(vote_time)
+        if self.cancelled:
+            return
+        if status_pin_msg and self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
+            await bot.unpin_chat_message(
+                chat_id=self.chat_id,
+                message_id=self.polling.message_id,
+            )
         vote_message = await bot.stop_poll(self.chat_id, self.polling.message_id)
         allow_count = vote_message.options[0].voter_count
         deny_count = vote_message.options[1].voter_count
