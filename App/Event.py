@@ -234,6 +234,9 @@ class JoinRequest:
                 await request.approve()
             else:
                 await request.decline()
+        except Exception as e:
+            logger.error(f"User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
+        try:
             await notice_message.edit_text(edit_msg)
         except Exception as e:
             logger.error(f"User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
@@ -258,37 +261,40 @@ class JoinRequest:
             return
         reply_msg = None
         edit_msg = None
+        if self.finished:
+            await bot.answer_callback_query(callback_query.id, "This request has been processed")
+            return
         if action == "Approve":
+            self.finished = True
             await self.request.approve()
             await bot.answer_callback_query(callback_query.id, "Approved.")
             edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
                        f"Approved by {callback_query.from_user.mention}"
             reply_msg = "您已获批准加入\nYou have been approved."
-            self.finished = True
         elif action == "Reject":
+            self.finished = True
             await self.request.decline()
             await bot.answer_callback_query(callback_query.id, "Denied.")
             edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
                        f"Denied by {callback_query.from_user.mention}"
             reply_msg = "您的申请已被拒绝。\nYou have been denied."
-            self.finished = True
         elif action == "Ban":
             if chat_member.can_restrict_members or chat_member.status == 'creator':
                 if self.bot_member.status == 'administrator' and self.bot_member.can_restrict_members:
+                    self.finished = True
                     await self.request.decline()
                     await bot.kick_chat_member(self.chat_id, self.user_id)
                     await bot.answer_callback_query(callback_query.id, "Banned.")
                     edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
                                f"Banned by {callback_query.from_user.mention}"
                     reply_msg = "您已被封禁。\nYou have been banned."
-                    self.finished = True
                 else:
+                    self.finished = True
                     await self.request.decline()
                     await bot.answer_callback_query(callback_query.id, "Bot has no permission to ban.")
                     edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
                                f"Denied by {callback_query.from_user.mention}"
                     reply_msg = "您的申请已被拒绝。\nYou have been denied."
-                    self.finished = True
             else:
                 await bot.answer_callback_query(callback_query.id, "You have no permission to ban.")
         else:
@@ -371,6 +377,9 @@ class Ostracism:
                     chat_member.status == 'creator'):
                 await bot.answer_callback_query(callback_query.id, "You have no permission to do this.")
                 return
+        if self.admin_status and action == "Approve":
+            await bot.answer_callback_query(callback_query.id, "Admin have already done this.")
+            return
         if action == "Approve":
             if callback_query.from_user.id == self.user_id:
                 if not ((chat_member.status == 'administrator' and chat_member.can_restrict_members) or
