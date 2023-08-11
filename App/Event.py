@@ -51,6 +51,37 @@ async def set_pin_message(bot, message: types.Message, db, bot_id):
         await message.reply("I don't have permission to pin messages.")
 
 
+async def set_clean_pin_service_msg(bot, message: types.Message, db, bot_id):
+    bot_member = await bot.get_chat_member(message.chat.id, bot_id)
+    if bot_member.status == 'administrator' and bot_member.can_delete_messages:
+        chat_member = await bot.get_chat_member(message.chat.id, message.from_user.id)
+        if (chat_member.status == 'administrator' and chat_member.can_delete_messages) or chat_member.status == 'creator':
+            command_args = message.text.split()
+            if len(command_args) == 1:
+                await message.reply("Malformed, expected /clean_pin_service_msg [On/Off]")
+            elif len(command_args) == 2:
+                if command_args[1] == "On" or command_args[1] == "on":
+                    await message.reply("Enable service message cleaning")
+                    chat_dict = db.get(str(message.chat.id))
+                    if chat_dict is None:
+                        chat_dict = {}
+                    chat_dict["clean_service_msg"] = True
+                    db.set(str(message.chat.id), chat_dict)
+                elif command_args[1] == "Off" or command_args[1] == "off":
+                    await message.reply("Disable service message cleaning")
+                    chat_dict = db.get(str(message.chat.id))
+                    if chat_dict is None:
+                        chat_dict = {}
+                    chat_dict["clean_service_msg"] = False
+                    db.set(str(message.chat.id), chat_dict)
+                else:
+                    await message.reply("Malformed, expected /clean_pin_service_msg [On/Off]")
+            else:
+                await message.reply("Malformed, expected /clean_pin_service_msg [On/Off]")
+        else:
+            await message.reply("You don't have permission to do this.")
+
+
 async def set_vote_time(bot, message: types.Message, db):
     chat_member = await bot.get_chat_member(message.chat.id, message.from_user.id)
     if (chat_member.status == 'administrator' and chat_member.can_invite_users) or chat_member.status == 'creator':
@@ -115,7 +146,7 @@ async def set_ostracism(bot, message: types.Message, db, bot_id):
 async def delete_pinned_message(bot, message: types.Message, db):
     status = db.get(str(message.chat.id))
     if status:
-        if status.get("pin_msg", False):
+        if status.get("clean_service_msg", False):
             try:
                 await message.delete()
             except Exception as e:
