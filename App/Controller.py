@@ -4,10 +4,12 @@
 # @Software: PyCharm
 # @GitHub: KimmyXYC
 import asyncio
-from App import Event
 from loguru import logger
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from App import Event
+from App.Ostracism import Ostracism
+from App.JoinRequest import JoinRequest
 from utils.Tool import calculate_md5
 
 
@@ -81,8 +83,8 @@ class BotRunner(object):
                             f"{message.chat.id}@{message.from_user.id}"
                             f"@{message.reply_to_message.from_user.id}@Ostracism"
                         )
-                        ostracism_task = Event.Ostracism(message.chat.id, message.from_user.id,
-                                                         message.reply_to_message.from_user.id, self.bot_id)
+                        ostracism_task = Ostracism(message.chat.id, message.from_user.id,
+                                                   message.reply_to_message.from_user.id, self.bot_id)
                         self.ostracism_tasks[ostracism_id] = ostracism_task
                         await ostracism_task.start_ostracism(bot, message)
                     else:
@@ -91,8 +93,8 @@ class BotRunner(object):
                 elif len(command_args) == 2:
                     ostracism_id = calculate_md5(
                         f"{message.chat.id}@{message.from_user.id}@{int(command_args[1])}@Ostracism")
-                    ostracism_task = Event.Ostracism(message.chat.id, message.from_user.id,
-                                                     command_args[1], self.bot_id)
+                    ostracism_task = Ostracism(message.chat.id, message.from_user.id,
+                                               command_args[1], self.bot_id)
                     self.ostracism_tasks[ostracism_id] = ostracism_task
                     await ostracism_task.start_ostracism(bot, message)
                 else:
@@ -103,12 +105,19 @@ class BotRunner(object):
 
         @dp.message_handler(content_types=types.ContentTypes.PINNED_MESSAGE)
         async def delete_pinned_message(message: types.Message):
-            await Event.delete_pinned_message(bot, message, self.db)
+            status = self.db.get(str(message.chat.id))
+            if not status:
+                return
+            if status.get("clean_service_msg", False):
+                try:
+                    await message.delete()
+                except Exception as e:
+                    logger.error(f"Delete pinned message failed: {e}")
 
         @dp.chat_join_request_handler()
         async def handle_new_chat_members(request: types.ChatJoinRequest):
             join_request_id = calculate_md5(f"{request.chat.id}@{request.from_user.id}@Join")
-            request_task = Event.JoinRequest(request.chat.id, request.from_user.id, self.bot_id)
+            request_task = JoinRequest(request.chat.id, request.from_user.id, self.bot_id)
             self.request_tasks[join_request_id] = request_task
             await request_task.handle_join_request(bot, request, _config, self.db)
 
