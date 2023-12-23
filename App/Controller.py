@@ -10,13 +10,14 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from App import Event
 from App.Ostracism import Ostracism
 from App.JoinRequest import JoinRequest
-from utils.Tool import calculate_md5
+from utils.Tool import cal_md5
 
 
 class BotRunner(object):
     def __init__(self, config, db):
         self.bot = config.bot
         self.proxy = config.proxy
+        self.config = config
         self.db = db
         self.request_tasks = {}
         self.ostracism_tasks = {}
@@ -79,7 +80,7 @@ class BotRunner(object):
                 command_args = message.text.split()
                 if len(command_args) == 1:
                     if message.reply_to_message is not None:
-                        ostracism_id = calculate_md5(
+                        ostracism_id = cal_md5(
                             f"{message.chat.id}@{message.from_user.id}"
                             f"@{message.reply_to_message.from_user.id}@Ostracism"
                         )
@@ -91,7 +92,7 @@ class BotRunner(object):
                         await message.reply("Malformed, please reply to the message sent by the user you want to "
                                             "ostracize or use the /ostracism command followed by the user's ID.")
                 elif len(command_args) == 2:
-                    ostracism_id = calculate_md5(
+                    ostracism_id = cal_md5(
                         f"{message.chat.id}@{message.from_user.id}@{int(command_args[1])}@Ostracism")
                     ostracism_task = Ostracism(message.chat.id, message.from_user.id,
                                                command_args[1], self.bot_id)
@@ -116,10 +117,10 @@ class BotRunner(object):
 
         @dp.chat_join_request_handler()
         async def handle_new_chat_members(request: types.ChatJoinRequest):
-            join_request_id = calculate_md5(f"{request.chat.id}@{request.from_user.id}@Join")
-            request_task = JoinRequest(request.chat.id, request.from_user.id, self.bot_id)
+            join_request_id = cal_md5(f"{request.chat.id}@{request.from_user.id}@Join")
+            request_task = JoinRequest(request.chat.id, request.from_user.id, self.bot_id, self.config)
             self.request_tasks[join_request_id] = request_task
-            await request_task.handle_join_request(bot, request, _config, self.db)
+            await request_task.handle_join_request(bot, request, self.db)
 
         @dp.callback_query_handler(lambda c: True)
         async def handle_callback_query(callback_query: types.CallbackQuery):

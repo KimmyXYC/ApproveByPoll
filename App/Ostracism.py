@@ -6,7 +6,7 @@
 import asyncio
 from loguru import logger
 from aiogram import types
-from utils.Tool import calculate_md5
+from utils.Tool import cal_md5
 
 
 class Ostracism:
@@ -43,7 +43,7 @@ class Ostracism:
             await message.reply("Cannot find the target user.")
             return
 
-        self.ostracism_id = calculate_md5(f"{self.chat_id}@{self.user_id}@{int(self.target_id)}@Ostracism")
+        self.ostracism_id = cal_md5(f"{self.chat_id}@{self.user_id}@{int(self.target_id)}@Ostracism")
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         approve_button = types.InlineKeyboardButton(
             text="Approve",

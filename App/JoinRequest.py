@@ -6,13 +6,15 @@
 import asyncio
 from loguru import logger
 from aiogram import types
-from utils.Tool import calculate_md5
+from utils.Tool import cal_md5
+from utils.LogChannel import log_c
 
 
 class JoinRequest:
-    def __init__(self, chat_id, user_id, bot_id):
+    def __init__(self, chat_id, user_id, bot_id, config):
         self.chat_id = chat_id
         self.user_id = user_id
+        self.config = config
         self.finished = False
 
         self.bot_id = bot_id
@@ -23,11 +25,13 @@ class JoinRequest:
         self.notice_message = None
         self.polling = None
 
-    async def handle_join_request(self, bot, request: types.ChatJoinRequest, config, db):
+    async def handle_join_request(self, bot, request: types.ChatJoinRequest, db):
         self.request = request
 
         self.bot_member = await bot.get_chat_member(self.chat_id, self.bot_id)
         logger.info(f"New join request from {request.from_user.mention}(ID: {self.user_id}) in {self.chat_id}")
+
+        await log_c(bot, request, "JoinRequest", self.config.log)
 
         chat_dict = db.get(str(self.chat_id))
         status_pin_msg = chat_dict.get("pin_msg", False)
@@ -47,6 +51,7 @@ class JoinRequest:
                    f"The result will be communicated to you in {_en_time}."
         _info = f"请激活机器人以便告知您申请结果。\n" \
                 f"Please activate the robot so that it can inform you of the application result."
+
         try:
             self.user_message = await bot.send_message(
                 self.user_id,
@@ -55,7 +60,7 @@ class JoinRequest:
         except Exception as e:
             logger.error(f"Cannot send message to {self.user_id}: {e}")
 
-        join_request_id = calculate_md5(f"{self.chat_id}@{self.user_id}@Join")
+        join_request_id = cal_md5(f"{self.chat_id}@{self.user_id}@Join")
         keyboard = types.InlineKeyboardMarkup(row_width=3)
         approve_button = types.InlineKeyboardButton(text="Approve", callback_data=f"Join/Approve/{join_request_id}")
         reject_button = types.InlineKeyboardButton(text="Reject", callback_data=f"Join/Reject/{join_request_id}")
@@ -130,8 +135,10 @@ class JoinRequest:
 
         try:
             if approve_user:
+                await log_c(bot, request, "Approve_JoinRequest", self.config.log)
                 await request.approve()
             else:
+                await log_c(bot, request, "Decline_JoinRequest", self.config.log)
                 await request.decline()
         except Exception as e:
             logger.error(f"User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
@@ -167,6 +174,7 @@ class JoinRequest:
             self.finished = True
             await self.request.approve()
             await bot.answer_callback_query(callback_query.id, "Approved.")
+            await log_c(bot, self.request, "Approve_JoinRequest", self.config.log, callback_query.from_user)
             edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
                        f"Approved by {callback_query.from_user.mention}"
             reply_msg = "您已获批准加入\nYou have been approved."
@@ -174,6 +182,7 @@ class JoinRequest:
             self.finished = True
             await self.request.decline()
             await bot.answer_callback_query(callback_query.id, "Denied.")
+            await log_c(bot, self.request, "Decline_JoinRequest", self.config.log, callback_query.from_user)
             edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
                        f"Denied by {callback_query.from_user.mention}"
             reply_msg = "您的申请已被拒绝。\nYou have been denied."
@@ -184,6 +193,7 @@ class JoinRequest:
                     await self.request.decline()
                     await bot.kick_chat_member(self.chat_id, self.user_id)
                     await bot.answer_callback_query(callback_query.id, "Banned.")
+                    await log_c(bot, self.request, "Ban_JoinRequest", self.config.log, callback_query.from_user)
                     edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
                                f"Banned by {callback_query.from_user.mention}"
                     reply_msg = "您已被封禁。\nYou have been banned."
@@ -191,6 +201,7 @@ class JoinRequest:
                     self.finished = True
                     await self.request.decline()
                     await bot.answer_callback_query(callback_query.id, "Bot has no permission to ban.")
+                    await log_c(bot, self.request, "Decline_JoinRequest", self.config.log, callback_query.from_user)
                     edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
                                f"Denied by {callback_query.from_user.mention}"
                     reply_msg = "您的申请已被拒绝。\nYou have been denied."
