@@ -71,15 +71,26 @@ class BotRunner(object):
         @dp.chat_join_request_handler()
         async def handle_new_chat_members(request: types.ChatJoinRequest):
             join_request_id = cal_md5(f"{request.chat.id}@{request.from_user.id}")
+            if join_request_id in self.join_tasks:
+                return
             join_task = JoinRequest(request.chat.id, request.from_user.id, self.bot_id, self.config)
             self.join_tasks[join_request_id] = join_task
             await join_task.handle_join_request(bot, request, self.db)
+            try:
+                del self.join_tasks[join_request_id]
+            except KeyError:
+                pass
 
         @dp.callback_query_handler(lambda c: True)
         async def handle_callback_query(callback_query: types.CallbackQuery):
             action = callback_query.data.split()[0]
             join_request_id = callback_query.data.split()[1]
-            join_tasks = self.join_tasks.get(join_request_id)
-            await join_tasks.handle_button(bot, callback_query, action)
+            join_tasks = self.join_tasks.get(join_request_id, None)
+            if join_tasks:
+                await join_tasks.handle_button(bot, callback_query, action)
+                try:
+                    del self.join_tasks[join_request_id]
+                except KeyError:
+                    pass
 
         asyncio.run(dp.start_polling())
