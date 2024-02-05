@@ -1,5 +1,5 @@
-rtoml
-loguru
-aiogram
-aiohttp_socks
-elara
+rtoml>=0.9.0
+loguru>=0.7.2
+aiogram>=3.3.0
+aiohttp_socks>=0.8.4
+elara>=0.5.5

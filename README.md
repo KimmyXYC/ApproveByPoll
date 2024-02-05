@@ -23,6 +23,9 @@ botToken = 'key' # Required, Bot Token
 [proxy]
 status = false
 url = "socks5://127.0.0.1:7890"
+
+[log]
+channel = -100123456789
 ```
 
 ### 本地 / Local
