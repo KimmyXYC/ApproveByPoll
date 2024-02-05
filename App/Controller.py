@@ -50,7 +50,7 @@ class BotRunner(object):
             else:
                 await message.reply("Please use this command in the group.")
 
-        @dp.message_handler(commands=["clean_pin_service_msg"])
+        @dp.message_handler(commands=["clean_pin_msg"])
         async def handle_command_clean_pin_msg(message: types.Message):
             if message.chat.type in ["group", "supergroup"]:
                 await Event.set_clean_pin_service_msg(bot, message, self.db, self.bot_id)
