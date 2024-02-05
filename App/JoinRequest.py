@@ -62,7 +62,7 @@ class JoinRequest:
                 f"{_zh_info}\n{_en_info}\n\n{_info}",
             )
         except Exception as e:
-            logger.error(f"Cannot send message to {self.user_id}: {e}")
+            logger.error(f"Send message to User_id:{self.user_id}: {e}")
 
         # Buttons
         join_request_id = cal_md5(f"{self.chat_id}@{self.user_id}")
@@ -144,6 +144,14 @@ class JoinRequest:
 
         # Process the request
         try:
+            await notice_message.edit_text(edit_msg)
+        except Exception as e:
+            logger.error(f"Edit message in Chat_id:{self.chat_id}: {e}")
+        try:
+            await self.user_message.reply(user_reply_msg)
+        except Exception as e:
+            logger.error(f"Send message to User_id:{self.user_id}: {e}")
+        try:
             if approve_user:
                 await log_c(bot, request, "Approve_JoinRequest", self.config.log)
                 await request.approve()
@@ -151,12 +159,7 @@ class JoinRequest:
                 await log_c(bot, request, "Decline_JoinRequest", self.config.log)
                 await request.decline()
         except Exception as e:
-            logger.error(f"User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
-        await notice_message.edit_text(edit_msg)
-        try:
-            await self.user_message.reply(user_reply_msg)
-        except Exception as e:
-            logger.error(f"Send message to User_id:{self.user_id}: {e}")
+            logger.error(f"Process request User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
 
         await asyncio.sleep(60)
 
@@ -179,7 +182,7 @@ class JoinRequest:
             return
         if action == "Approve":
             self.finished = True
-            await self.request.approve()
+            approve_user = True
             await bot.answer_callback_query(callback_query.id, "Approved.")
             await log_c(bot, self.request, "Approve_JoinRequest", self.config.log, callback_query.from_user)
             edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
@@ -187,7 +190,7 @@ class JoinRequest:
             reply_msg = "您已获批准加入\nYou have been approved."
         elif action == "Reject":
             self.finished = True
-            await self.request.decline()
+            approve_user = False
             await bot.answer_callback_query(callback_query.id, "Denied.")
             await log_c(bot, self.request, "Decline_JoinRequest", self.config.log, callback_query.from_user)
             edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
@@ -197,16 +200,16 @@ class JoinRequest:
             if chat_member.can_restrict_members or chat_member.status == 'creator':
                 if self.bot_member.status == 'administrator' and self.bot_member.can_restrict_members:
                     self.finished = True
-                    await self.request.decline()
+                    approve_user = False
                     await bot.kick_chat_member(self.chat_id, self.user_id)
                     await bot.answer_callback_query(callback_query.id, "Banned.")
                     await log_c(bot, self.request, "Ban_JoinRequest", self.config.log, callback_query.from_user)
                     edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
                                f"Banned by {callback_query.from_user.mention}"
-                    reply_msg = "您已被封禁。\nYou have been banned."
+                    reply_msg = "您的申请已被拒绝。\nYou have been denied."
                 else:
                     self.finished = True
-                    await self.request.decline()
+                    approve_user = False
                     await bot.answer_callback_query(callback_query.id, "Bot has no permission to ban.")
                     await log_c(bot, self.request, "Decline_JoinRequest", self.config.log, callback_query.from_user)
                     edit_msg = f"{self.request.from_user.mention} (ID: {self.user_id}): " \
@@ -224,7 +227,14 @@ class JoinRequest:
         try:
             await self.user_message.reply(reply_msg)
         except Exception as e:
-            logger.error(f"User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
+            logger.error(f"Send message to User_id:{self.user_id}: {e}")
+        try:
+            if approve_user:
+                await self.request.approve()
+            else:
+                await self.request.decline()
+        except Exception as e:
+            logger.error(f"Process request User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
 
         # Clean up
         await bot.stop_poll(self.chat_id, self.polling.message_id)
