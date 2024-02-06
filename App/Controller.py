@@ -72,7 +72,9 @@ class BotRunner(object):
         async def handle_new_chat_members(request: types.ChatJoinRequest):
             join_request_id = cal_md5(f"{request.chat.id}@{request.from_user.id}")
             if join_request_id in self.join_tasks:
-                return
+                join_task = self.join_tasks[join_request_id]
+                if not join_task.ccheck_up_status():
+                    return
             join_task = JoinRequest(request.chat.id, request.from_user.id, self.bot_id, self.config)
             self.join_tasks[join_request_id] = join_task
             await join_task.handle_join_request(bot, request, self.db)
@@ -86,8 +88,10 @@ class BotRunner(object):
             action = callback_query.data.split()[0]
             join_request_id = callback_query.data.split()[1]
             join_tasks = self.join_tasks.get(join_request_id, None)
-            if join_tasks:
-                await join_tasks.handle_button(bot, callback_query, action)
+            if join_tasks is None:
+                return
+            await join_tasks.handle_button(bot, callback_query, action)
+            if join_tasks.ccheck_up_status():
                 try:
                     del self.join_tasks[join_request_id]
                 except KeyError:

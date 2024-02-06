@@ -25,6 +25,9 @@ class JoinRequest:
         self.notice_message = None
         self.polling = None
 
+    def check_up_status(self):
+        return self.finished
+
     async def handle_join_request(self, bot, request: types.ChatJoinRequest, db):
         self.request = request
         self.bot_member = await bot.get_chat_member(self.chat_id, self.bot_id)
@@ -160,6 +163,7 @@ class JoinRequest:
                 await request.decline()
         except Exception as e:
             logger.error(f"Process request User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
+        self.finished = True
 
         await asyncio.sleep(60)
 
