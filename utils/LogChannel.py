@@ -8,7 +8,11 @@ from telebot import types
 
 
 async def log_c(bot, request: types.ChatJoinRequest, log_type, config, admin_mention=None):
-    mention = f'<a href="tg://user?id={request.from_user.id}">{request.from_user.first_name}</a>'
+    mention = f'<a href="tg://user?id={request.from_user.id}">{request.from_user.first_name}'
+    if request.from_user.last_name is not None:
+        mention += f" {request.from_user.last_name}</a>"
+    else:
+        mention += "</a>"
     message = f"""
 #{log_type}:
 <b>Chat</b>: {request.chat.title}

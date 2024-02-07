@@ -34,7 +34,11 @@ class JoinRequest:
         self.request = request
         self.bot_member = await bot.get_chat_member(self.chat_id, self.bot_id)
 
-        self.user_mention = f'<a href="tg://user?id={self.user_id}">{request.from_user.first_name}</a>'
+        self.user_mention = f'<a href="tg://user?id={self.user_id}">{request.from_user.first_name}'
+        if request.from_user.last_name is not None:
+            self.user_mention += f" {request.from_user.last_name}</a>"
+        else:
+            self.user_mention += "</a>"
 
         # Log
         logger.info(f"New join request from {request.from_user.first_name}(ID: {self.user_id}) in {self.chat_id}")
@@ -187,7 +191,11 @@ class JoinRequest:
             await bot.answer_callback_query(callback_query.id, "This request has been processed")
             return
 
-        admin_mention = f'<a href="tg://user?id={callback_query.from_user.id}">{callback_query.from_user.first_name}</a>'
+        admin_mention = f'<a href="tg://user?id={callback_query.from_user.id}">{callback_query.from_user.first_name}'
+        if callback_query.from_user.last_name is not None:
+            admin_mention += f" {callback_query.from_user.last_name}</a>"
+        else:
+            admin_mention += "</a>"
 
         if action == "Approve":
             self.finished = True
