@@ -44,7 +44,9 @@ class JoinRequest:
         logger.info(f"New join request from {request.from_user.first_name}(ID: {self.user_id}) in {self.chat_id}")
         await log_c(bot, request, "JoinRequest", self.config.log)
 
-        chat_dict = db.get(str(self.chat_id), {})
+        chat_dict = db.get(str(self.chat_id))
+        if chat_dict is None:
+            chat_dict = {}
         status_pin_msg = chat_dict.get("pin_msg", False)
         vote_time = chat_dict.get("vote_time", 600)
 
