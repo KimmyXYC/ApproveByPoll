@@ -44,7 +44,9 @@ class JoinRequest:
         logger.info(f"New join request from {request.from_user.first_name}(ID: {self.user_id}) in {self.chat_id}")
         await log_c(bot, request, "JoinRequest", self.config.log)
 
-        chat_dict = db.get(str(self.chat_id), {})
+        chat_dict = db.get(str(self.chat_id))
+        if chat_dict is None:
+            chat_dict = {}
         status_pin_msg = chat_dict.get("pin_msg", False)
         vote_time = chat_dict.get("vote_time", 600)
 
@@ -83,7 +85,7 @@ class JoinRequest:
 
         notice_message = await bot.send_message(
             self.chat_id,
-            f"{self.user_mention} (ID: {self.user_id}) is requesting to join this group.",
+            f"{self.user_mention} (ID: <code>{self.user_id}</code>) is requesting to join this group.",
             reply_markup=keyboard,
             parse_mode="HTML"
         )
@@ -130,25 +132,25 @@ class JoinRequest:
             logger.info(f"{self.user_id}: No one voted in {self.chat_id}")
             result_message = bot.reply_to(notice_message, "No one voted.")
             approve_user = False
-            edit_msg = f"{self.user_mention} (ID: {self.user_id}): No one voted."
+            edit_msg = f"{self.user_mention} (ID: <code>{self.user_id}</code>): No one voted."
             user_reply_msg = "无人投票，请稍后尝试重新申请。\nNo one voted. Please request again later."
         elif allow_count > deny_count:
-            logger.info(f"{self.user_id}: Approved {self.user_id} in {self.chat_id}")
+            logger.info(f"{self.user_id}: Approved in {self.chat_id}")
             result_message = await bot.reply_to(notice_message, "Approved.")
             approve_user = True
-            edit_msg = f"{self.user_mention} (ID: {self.user_id}): Approved."
+            edit_msg = f"{self.user_mention} (ID: <code>{self.user_id}</code>): Approved."
             user_reply_msg = "您已获批准加入\nYou have been approved."
         elif allow_count == deny_count:
-            logger.info(f"{self.user_id} (ID: {self.user_id}): Tie in {self.chat_id}")
+            logger.info(f"{self.user_id}: Tie in {self.chat_id}")
             result_message = await bot.reply_to(notice_message, "Tie.")
             approve_user = False
-            edit_msg = f"{self.user_mention}: Tie."
+            edit_msg = f"{self.user_mention} (ID: <code>{self.user_id}</code>): Tie."
             user_reply_msg = "平票，请稍后尝试重新申请。\nTie. Please request again later."
         else:
-            logger.info(f"{self.user_id}: Denied {self.user_id} in {self.chat_id}")
+            logger.info(f"{self.user_id}: Denied in {self.chat_id}")
             result_message = await bot.reply_to(notice_message, "Denied.")
             approve_user = False
-            edit_msg = f"{self.user_mention} (ID: {self.user_id}): Denied."
+            edit_msg = f"{self.user_mention} (ID: <code>{self.user_id}</code>): Denied."
             user_reply_msg = "您的申请已被拒绝。\nYou have been denied."
 
         # Process the request
@@ -201,15 +203,17 @@ class JoinRequest:
             self.finished = True
             approve_user = True
             await bot.answer_callback_query(callback_query.id, "Approved.")
+            logger.info(f"{self.user_id}: Approved by {callback_query.from_user.id} in {self.chat_id}")
             await log_c(bot, self.request, "Approve_JoinRequest", self.config.log, admin_mention)
-            edit_msg = f"{self.user_mention} (ID: {self.user_id}): Approved by {admin_mention}"
+            edit_msg = f"{self.user_mention} (ID: <code>{self.user_id}</code>): Approved by {admin_mention}"
             reply_msg = "您已获批准加入\nYour application have been approved."
         elif action == "Reject":
             self.finished = True
             approve_user = False
             await bot.answer_callback_query(callback_query.id, "Denied.")
+            logger.info(f"{self.user_id}: Denied by {callback_query.from_user.id} in {self.chat_id}")
             await log_c(bot, self.request, "Decline_JoinRequest", self.config.log, admin_mention)
-            edit_msg = f"{self.user_mention} (ID: {self.user_id}): Denied by {admin_mention}"
+            edit_msg = f"{self.user_mention} (ID: <code>{self.user_id}</code>): Denied by {admin_mention}"
             reply_msg = "您的申请已被拒绝。\nYour application have been denied."
         elif action == "Ban":
             if chat_member.can_restrict_members or chat_member.status == 'creator':
@@ -218,15 +222,17 @@ class JoinRequest:
                     approve_user = False
                     await bot.kick_chat_member(self.chat_id, self.user_id)
                     await bot.answer_callback_query(callback_query.id, "Banned.")
+                    logger.info(f"{self.user_id}: Banned by {callback_query.from_user.id} in {self.chat_id}")
                     await log_c(bot, self.request, "Ban_JoinRequest", self.config.log, admin_mention)
-                    edit_msg = f"{self.user_mention} (ID: {self.user_id}): Banned by {admin_mention}"
+                    edit_msg = f"{self.user_mention} (ID: <code>{self.user_id}</code>): Banned by {admin_mention}"
                     reply_msg = "您的申请已被拒绝。\nYour application have been denied."
                 else:
                     self.finished = True
                     approve_user = False
                     await bot.answer_callback_query(callback_query.id, "Bot has no permission to ban.")
+                    logger.info(f"{self.user_id}: Denied by {callback_query.from_user.id} in {self.chat_id}")
                     await log_c(bot, self.request, "Decline_JoinRequest", self.config.log, admin_mention)
-                    edit_msg = f"{self.user_mention} (ID: {self.user_id}): Denied by {admin_mention}"
+                    edit_msg = f"{self.user_mention} (ID: <code>{self.user_id}</code>): Denied by {admin_mention}"
                     reply_msg = "您的申请已被拒绝。\nYour application have been denied."
             else:
                 await bot.answer_callback_query(callback_query.id, "You have no permission to ban.")
