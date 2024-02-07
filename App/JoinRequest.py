@@ -61,12 +61,10 @@ class JoinRequest:
         _zh_info = f"您正在申请加入「{request.chat.title}」，结果将于 {_cn_time} 后告知您。"
         _en_info = f"You are applying to join 「{request.chat.title}」. " \
                    f"The result will be communicated to you in {_en_time}."
-        _info = f"请激活机器人以便告知您申请结果。\n" \
-                f"Please activate the robot so that it can inform you of the application result."
         try:
             self.user_message = await bot.send_message(
                 self.user_id,
-                f"{_zh_info}\n{_en_info}\n\n{_info}",
+                f"{_zh_info}\n{_en_info}",
             )
         except Exception as e:
             logger.error(f"Send message to User_id:{self.user_id}: {e}")
