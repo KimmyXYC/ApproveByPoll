@@ -8,7 +8,7 @@ from loguru import logger
 from telebot import util, types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
-from App import Event
+from App import Event, DashBoard
 from App.JoinRequest import JoinRequest
 from utils.Tool import cal_md5
 
@@ -39,10 +39,10 @@ class BotRunner(object):
         async def handle_command(message: types.Message):
             await Event.start(bot, message)
 
-        @bot.message_handler(commands=["pin_vote_msg"])
-        async def handle_command_pin_msg(message: types.Message):
+        @bot.message_handler(commands=["setting"])
+        async def handle_command_setting(message: types.Message):
             if message.chat.type in ["group", "supergroup"]:
-                await Event.set_pin_message(bot, message, self.db, self.bot_id)
+                await DashBoard.homepage(bot, message, self.db)
             else:
                 await bot.reply_to(message, "Please use this command in the group.")
 
@@ -53,19 +53,12 @@ class BotRunner(object):
             else:
                 await bot.reply_to(message, "Please use this command in the group.")
 
-        @bot.message_handler(commands=["clean_pin_msg"])
-        async def handle_command_clean_pin_msg(message: types.Message):
-            if message.chat.type in ["group", "supergroup"]:
-                await Event.set_clean_pin_msg(bot, message, self.db, self.bot_id)
-            else:
-                await bot.reply_to(message, "Please use this command in the group.")
-
         @bot.message_handler(content_types=['pinned_message'])
         async def delete_pinned_message(message: types.Message):
             status = self.db.get(str(message.chat.id))
             if not status:
                 return
-            if status.get("clean_service_msg", False):
+            if status.get("clean_pinned_message", False):
                 try:
                     await bot.delete_message(message.chat.id, message.message_id)
                 except Exception as e:
@@ -73,6 +66,12 @@ class BotRunner(object):
 
         @bot.chat_join_request_handler()
         async def handle_new_chat_members(request: types.ChatJoinRequest):
+            chat_dict = self.db.get(str(request.chat.id))
+            if chat_dict is None:
+                chat_dict = {}
+            vote_to_join = chat_dict.get("vote_to_join", True)
+            if not vote_to_join:
+                return
             join_request_id = cal_md5(f"{request.chat.id}@{request.from_user.id}")
             if join_request_id in self.join_tasks:
                 join_task = self.join_tasks[join_request_id]
@@ -88,17 +87,22 @@ class BotRunner(object):
 
         @bot.callback_query_handler(lambda c: True)
         async def handle_callback_query(callback_query: types.CallbackQuery):
-            action = callback_query.data.split()[0]
-            join_request_id = callback_query.data.split()[1]
-            join_tasks = self.join_tasks.get(join_request_id, None)
-            if join_tasks is None:
-                return
-            await join_tasks.handle_button(bot, callback_query, action)
-            if join_tasks.check_up_status():
-                try:
-                    del self.join_tasks[join_request_id]
-                except KeyError:
-                    pass
+            requests_type = callback_query.data.split()[0]
+            if requests_type == "JR":
+                action = callback_query.data.split()[0]
+                join_request_id = callback_query.data.split()[1]
+                if join_request_id in self.join_tasks:
+                    join_task = self.join_tasks[join_request_id]
+                else:
+                    return
+                await join_task.handle_button(bot, callback_query, action)
+                if join_task.check_up_status():
+                    try:
+                        del self.join_tasks[join_request_id]
+                    except KeyError:
+                        pass
+            elif requests_type == "Setting":
+                await DashBoard.command_handler(bot, callback_query, self.db, self.bot_id)
 
         async def main():
             await asyncio.gather(bot.polling(non_stop=True, allowed_updates=util.update_types))

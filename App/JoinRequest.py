@@ -78,9 +78,9 @@ class JoinRequest:
         # Buttons
         join_request_id = cal_md5(f"{self.chat_id}@{self.user_id}")
         keyboard = types.InlineKeyboardMarkup(row_width=3)
-        approve_button = types.InlineKeyboardButton(text="Approve", callback_data=f"Approve {join_request_id}")
-        reject_button = types.InlineKeyboardButton(text="Reject", callback_data=f"Reject {join_request_id}")
-        ban_button = types.InlineKeyboardButton(text="Ban", callback_data=f"Ban {join_request_id}")
+        approve_button = types.InlineKeyboardButton(text="Approve", callback_data=f"JR Approve {join_request_id}")
+        reject_button = types.InlineKeyboardButton(text="Reject", callback_data=f"JR Reject {join_request_id}")
+        ban_button = types.InlineKeyboardButton(text="Ban", callback_data=f"JR Ban {join_request_id}")
         keyboard.add(approve_button, reject_button, ban_button)
 
         notice_message = await bot.send_message(
