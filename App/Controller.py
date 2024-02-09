@@ -121,8 +121,8 @@ class BotRunner(object):
         async def handle_callback_query(callback_query: types.CallbackQuery):
             requests_type = callback_query.data.split()[0]
             if requests_type == "JR":
-                action = callback_query.data.split()[0]
-                join_request_id = callback_query.data.split()[1]
+                action = callback_query.data.split()[1]
+                join_request_id = callback_query.data.split()[2]
                 if join_request_id in self.join_tasks:
                     join_task = self.join_tasks.get(join_request_id)
                 else:
