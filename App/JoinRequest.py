@@ -35,7 +35,7 @@ class JoinRequest:
         self.bot_member = await bot.get_chat_member(self.chat_id, self.bot_id)
 
         if request.from_user.username is not None:
-            self.user_mention = f'<a href="tg://user?id={self.user_id}">@{request.from_user.username}</a>'
+            self.user_mention = f'@{request.from_user.username}'
         else:
             self.user_mention = f'<a href="tg://user?id={self.user_id}">{request.from_user.first_name}'
             if request.from_user.last_name is not None:
