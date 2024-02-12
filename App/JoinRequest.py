@@ -34,11 +34,14 @@ class JoinRequest:
         self.request = request
         self.bot_member = await bot.get_chat_member(self.chat_id, self.bot_id)
 
-        self.user_mention = f'<a href="tg://user?id={self.user_id}">{request.from_user.first_name}'
-        if request.from_user.last_name is not None:
-            self.user_mention += f" {request.from_user.last_name}</a>"
+        if request.from_user.username is not None:
+            self.user_mention = f'<a href="tg://user?id={self.user_id}">@{request.from_user.username}</a>'
         else:
-            self.user_mention += "</a>"
+            self.user_mention = f'<a href="tg://user?id={self.user_id}">{request.from_user.first_name}'
+            if request.from_user.last_name is not None:
+                self.user_mention += f" {request.from_user.last_name}</a>"
+            else:
+                self.user_mention += "</a>"
 
         # Log
         logger.info(f"New join request from {request.from_user.first_name}(ID: {self.user_id}) in {self.chat_id}")
@@ -83,9 +86,13 @@ class JoinRequest:
         ban_button = types.InlineKeyboardButton(text="Ban", callback_data=f"JR Ban {join_request_id}")
         keyboard.add(approve_button, reject_button, ban_button)
 
+        notice_message_text = f"{self.user_mention} (ID: <code>{self.user_id}</code>) is requesting to join this group."
+        if request.from_user.username is None:
+            notice_message_text += f"\n\n Alternate Link: tg://user?id={self.user_id}"
+
         notice_message = await bot.send_message(
             self.chat_id,
-            f"{self.user_mention} (ID: <code>{self.user_id}</code>) is requesting to join this group.",
+            notice_message_text,
             reply_markup=keyboard,
             parse_mode="HTML"
         )
