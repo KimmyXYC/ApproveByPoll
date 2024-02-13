@@ -88,7 +88,7 @@ class JoinRequest:
 
         notice_message_text = f"{self.user_mention} (ID: <code>{self.user_id}</code>) is requesting to join this group."
         if request.from_user.username is None:
-            notice_message_text += f"\n\n Alternate Link: tg://user?id={self.user_id}"
+            notice_message_text += f"\n\nAlternate Link: tg://user?id={self.user_id}"
 
         notice_message = await bot.send_message(
             self.chat_id,
