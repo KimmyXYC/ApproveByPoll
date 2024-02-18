@@ -20,7 +20,10 @@ async def start(bot, message: types.Message):
 async def set_vote_time(bot, message: types.Message, db):
     chat_member = await bot.get_chat_member(message.chat.id, message.from_user.id)
     if (chat_member.status == 'administrator' and chat_member.can_invite_users) \
-            or chat_member.status == 'creator':
+            or chat_member.status == 'creator' or message.from_user.username == "GroupAnonymousBot":
+        if message.from_user.username == "GroupAnonymousBot":
+            await bot.reply_to(message, "As an anonymous administrator, please use the Dashboard for this purpose.")
+            return
         command_args = message.text.split()
         if len(command_args) != 2:
             await bot.reply_to(message, "Malformed, expected /set_vote_time [time]")

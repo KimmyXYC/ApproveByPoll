@@ -43,7 +43,7 @@ class BotRunner(object):
         @bot.message_handler(commands=["setting"])
         async def handle_command_setting(message: types.Message):
             if message.chat.type in ["group", "supergroup"]:
-                await DashBoard.homepage(bot, message, self.db)
+                await DashBoard.homepage(bot, message, self.db, self.bot_id)
             else:
                 await bot.reply_to(message, "Please use this command in the group.")
 

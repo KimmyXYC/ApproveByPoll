@@ -131,19 +131,20 @@ class Ostracism:
             parse_mode="HTML"
         )
 
+        chat_dict = db.get(str(self.chat_id))
+        status_pin_msg = chat_dict.get("pin_msg", False)
+        anonymous_vote = chat_dict.get("anonymous_vote", True)
+
         vote_question = "Kick out this user?"
         vote_options = ["Yes", "No"]
         self.polling = await bot.send_poll(
             self.chat_id,
             vote_question,
             vote_options,
-            is_anonymous=True,
+            is_anonymous=anonymous_vote,
             allows_multiple_answers=False,
             reply_to_message_id=self.start_msg.message_id,
         )
-
-        chat_dict = db.get(str(self.chat_id))
-        status_pin_msg = chat_dict.get("pin_msg", False)
 
         if status_pin_msg and self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
             await bot.pin_chat_message(

@@ -52,6 +52,7 @@ class JoinRequest:
             chat_dict = {}
         status_pin_msg = chat_dict.get("pin_msg", False)
         vote_time = chat_dict.get("vote_time", 600)
+        anonymous_vote = chat_dict.get("anonymous_vote", True)
 
         # Time format
         minutes = vote_time // 60
@@ -105,7 +106,7 @@ class JoinRequest:
             self.chat_id,
             vote_question,
             vote_options,
-            is_anonymous=True,
+            is_anonymous=anonymous_vote,
             allows_multiple_answers=False,
             reply_to_message_id=notice_message.message_id,
         )
