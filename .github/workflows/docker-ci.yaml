@@ -3,6 +3,11 @@ name: Docker Image CI
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - '**.toml'
+      - 'LICENSE'
+      - '!.github/workflows/**'
 
 env:
   REGISTRY: ghcr.io
