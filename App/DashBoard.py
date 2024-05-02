@@ -3,14 +3,17 @@
 # @FileName: DashBoard.py
 # @Software: PyCharm
 # @GitHub: KimmyXYC
+import gettext
 from telebot import types
 from loguru import logger
+
+_ = gettext.gettext
 
 FORMAT = {
     True: "✅",
     False: "❌"
 }
-ADDITION = "If you want to change the settings, please click the button below."
+ADDITION = _("If you want to change the settings, please click the button below.")
 
 
 def db_analyzer(db, chat_id, data_type="all", default_value=None):
@@ -35,22 +38,22 @@ def message_creator(chat_id, db, addition=ADDITION):
     minutes = vote_time // 60
     seconds = vote_time % 60
     if minutes == 0:
-        _time = f"{seconds} seconds"
+        _time = _("{} seconds").format(seconds)
     elif seconds == 0:
-        _time = f"{minutes} minutes"
+        _time = _("{} minutes").format(minutes)
     else:
-        _time = f"{minutes} minutes and {seconds} seconds"
+        _time = _("{} minutes and {} seconds").format(minutes, seconds)
 
-    reply_message = f"""
-<b>Group Setting</b>
-
-<b>Vote To Join</b>: {vote_to_join}
-<b>Vote To Kick</b>: {vote_to_kick}
-<b>Vote Time</b>: {_time}
-<b>Pin Vote Message</b>: {pin_msg}
-<b>Clean Pinned Message</b>: {clean_pinned_message}
-<b>Anonymous Vote</b>: {anonymous_vote}
-        """
+    reply_message_info = [
+        _("<b>Group Setting</b>\n"),
+        _("<b>Vote To Join</b>: {}").format(vote_to_join),
+        _("<b>Vote To Kick</b>: {}").format(vote_to_kick),
+        _("<b>Vote Time</b>: {}").format(_time),
+        _("<b>Pin Vote Message</b>: {}").format(pin_msg),
+        _("<b>Clean Pinned Message</b>: {}").format(clean_pinned_message),
+        _("<b>Anonymous Vote</b>: {}").format(anonymous_vote)
+    ]
+    reply_message = "\n".join(reply_message_info)
     if addition:
         reply_message += "\n"
         reply_message += addition
@@ -62,19 +65,19 @@ def message_creator(chat_id, db, addition=ADDITION):
 
 def button_creator(vote_to_join, vote_to_kick, pin_msg, clean_pinned_message, chat_id, anonymous_vote):
     buttons = types.InlineKeyboardMarkup()
-    buttons.add(types.InlineKeyboardButton(f"{FORMAT.get(vote_to_join)} Vote To Join",
+    buttons.add(types.InlineKeyboardButton(_("{} Vote To Join").format(FORMAT.get(vote_to_join)),
                                            callback_data=f"Setting vote_to_join {chat_id}"),
-                types.InlineKeyboardButton(f"{FORMAT.get(vote_to_kick)} Vote To Kick",
+                types.InlineKeyboardButton(_("{} Vote To Kick").format(FORMAT.get(vote_to_kick)),
                                            callback_data=f"Setting vote_to_kick {chat_id}"))
-    buttons.add(types.InlineKeyboardButton(f"Set Vote Time",
+    buttons.add(types.InlineKeyboardButton(_("Set Vote Time"),
                                            callback_data=f"Setting vote_time {chat_id}"))
-    buttons.add(types.InlineKeyboardButton(f"{FORMAT.get(pin_msg)} Pin Vote Message",
+    buttons.add(types.InlineKeyboardButton(_("{} Pin Vote Message").format(FORMAT.get(pin_msg)),
                                            callback_data=f"Setting pin_msg {chat_id}"),
-                types.InlineKeyboardButton(f"{FORMAT.get(clean_pinned_message)} Clean Pinned Message",
+                types.InlineKeyboardButton(_("{} Clean Pinned Message").format(FORMAT.get(clean_pinned_message)),
                                            callback_data=f"Setting clean_pinned_message {chat_id}"))
-    buttons.add(types.InlineKeyboardButton(f"{FORMAT.get(anonymous_vote)} Anonymous Vote",
+    buttons.add(types.InlineKeyboardButton(_("{} Anonymous Vote").format(FORMAT.get(anonymous_vote)),
                                            callback_data=f"Setting anonymous_vote {chat_id}"))
-    buttons.add(types.InlineKeyboardButton("Close", callback_data="Setting close"))
+    buttons.add(types.InlineKeyboardButton(_("Close"), callback_data="Setting close"))
     return buttons
 
 
@@ -91,7 +94,7 @@ async def homepage(bot, message: types.Message, db, bot_id):
             disable_web_page_preview=True
         )
     else:
-        await bot.reply_to(message, "You don't have permission to do this.")
+        await bot.reply_to(message, _("You don't have permission to do this."))
     bot_member = await bot.get_chat_member(message.chat.id, bot_id)
     if bot_member.status == 'administrator' and bot_member.can_delete_messages:
         await bot.delete_message(message.chat.id, message.message_id)
@@ -109,7 +112,7 @@ async def homepage_back(bot, callback_query, db, chat_member):
             disable_web_page_preview=True
         )
     else:
-        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        await bot.answer_callback_query(callback_query.id, _("You don't have permission to do this."))
         return
 
 
@@ -118,7 +121,7 @@ async def command_handler(bot, callback_query: types.CallbackQuery, db, bot_id):
     chat_member = await bot.get_chat_member(callback_query.message.chat.id, callback_query.from_user.id)
     bot_member = await bot.get_chat_member(callback_query.message.chat.id, bot_id)
     if chat_member.status != 'administrator' and chat_member.status != 'creator':
-        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        await bot.answer_callback_query(callback_query.id, _("You don't have permission to do this."))
         return
     if requests_type == "vote_to_join":
         await vote_to_join_handler(bot, callback_query, db, chat_member)
@@ -147,7 +150,7 @@ async def command_handler(bot, callback_query: types.CallbackQuery, db, bot_id):
 
 async def vote_to_join_handler(bot, callback_query: types.CallbackQuery, db, chat_member):
     if chat_member.status != 'creator' and (chat_member.status != 'administrator' or not chat_member.can_invite_users):
-        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        await bot.answer_callback_query(callback_query.id, _("You don't have permission to do this."))
         return
     chat_id = int(callback_query.data.split()[2])
     vote_to_join, chat_dict = db_analyzer(db, chat_id, "vote_to_join", True)
@@ -171,7 +174,7 @@ async def vote_to_join_handler(bot, callback_query: types.CallbackQuery, db, cha
 async def vote_to_kick_handler(bot,  callback_query: types.CallbackQuery, db, chat_member):
     if chat_member.status != 'creator' and (
             chat_member.status != 'administrator' or not chat_member.can_restrict_members):
-        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        await bot.answer_callback_query(callback_query.id, _("You don't have permission to do this."))
         return
     chat_id = int(callback_query.data.split()[2])
     vote_to_kick, chat_dict = db_analyzer(db, chat_id, "vote_to_kick", False)
@@ -194,22 +197,22 @@ async def vote_to_kick_handler(bot,  callback_query: types.CallbackQuery, db, ch
 
 async def vote_time_handler(bot, callback_query: types.CallbackQuery, db, chat_member):
     if chat_member.status != 'creator' and (chat_member.status != 'administrator' or not chat_member.can_change_info):
-        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        await bot.answer_callback_query(callback_query.id, _("You don't have permission to do this."))
         return
     chat_id = int(callback_query.data.split()[2])
-    addition = "If you want to change the vote time precisely, please use the command /set_vote_time"
-    reply_message, _ = message_creator(chat_id, db, addition)
+    addition = _("If you want to change the vote time precisely, please use the command /set_vote_time")
+    reply_message, _buttons = message_creator(chat_id, db, addition)
     buttons = types.InlineKeyboardMarkup()
-    buttons.add(types.InlineKeyboardButton(f"1 min", callback_data=f"Setting edit_vote_time {chat_id} 60"),
-                types.InlineKeyboardButton(f"2 min", callback_data=f"Setting edit_vote_time {chat_id} 120"),
-                types.InlineKeyboardButton(f"3 min", callback_data=f"Setting edit_vote_time {chat_id} 180"))
-    buttons.add(types.InlineKeyboardButton(f"5min", callback_data=f"Setting edit_vote_time {chat_id} 300"),
-                types.InlineKeyboardButton(f"10min", callback_data=f"Setting edit_vote_time {chat_id} 600"),
-                types.InlineKeyboardButton(f"15min", callback_data=f"Setting edit_vote_time {chat_id} 900"))
-    buttons.add(types.InlineKeyboardButton(f"20min", callback_data=f"Setting edit_vote_time {chat_id} 1200"),
-                types.InlineKeyboardButton(f"30min", callback_data=f"Setting edit_vote_time {chat_id} 1800"),
-                types.InlineKeyboardButton(f"60min", callback_data=f"Setting edit_vote_time {chat_id} 3600"))
-    buttons.add(types.InlineKeyboardButton("⬅️ Go Back", callback_data="Setting back"))
+    buttons.add(types.InlineKeyboardButton("1 min", callback_data=f"Setting edit_vote_time {chat_id} 60"),
+                types.InlineKeyboardButton("2 min", callback_data=f"Setting edit_vote_time {chat_id} 120"),
+                types.InlineKeyboardButton("3 min", callback_data=f"Setting edit_vote_time {chat_id} 180"))
+    buttons.add(types.InlineKeyboardButton("5min", callback_data=f"Setting edit_vote_time {chat_id} 300"),
+                types.InlineKeyboardButton("10min", callback_data=f"Setting edit_vote_time {chat_id} 600"),
+                types.InlineKeyboardButton("15min", callback_data=f"Setting edit_vote_time {chat_id} 900"))
+    buttons.add(types.InlineKeyboardButton("20min", callback_data=f"Setting edit_vote_time {chat_id} 1200"),
+                types.InlineKeyboardButton("30min", callback_data=f"Setting edit_vote_time {chat_id} 1800"),
+                types.InlineKeyboardButton("60min", callback_data=f"Setting edit_vote_time {chat_id} 3600"))
+    buttons.add(types.InlineKeyboardButton(_("⬅️ Go Back"), callback_data="Setting back"))
     await bot.edit_message_text(
         reply_message,
         callback_query.message.chat.id,
@@ -222,7 +225,7 @@ async def vote_time_handler(bot, callback_query: types.CallbackQuery, db, chat_m
 
 async def edit_vote_time_handler(bot, callback_query: types.CallbackQuery, db, chat_member):
     if chat_member.status != 'creator' and (chat_member.status != 'administrator' or not chat_member.can_change_info):
-        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        await bot.answer_callback_query(callback_query.id, _("You don't have permission to do this."))
         return
     chat_id = int(callback_query.data.split()[2])
     vote_time = int(callback_query.data.split()[3])
@@ -242,10 +245,10 @@ async def edit_vote_time_handler(bot, callback_query: types.CallbackQuery, db, c
 
 async def pin_msg_handler(bot, callback_query: types.CallbackQuery, db, chat_member, bot_member):
     if bot_member.status != 'administrator' or not bot_member.can_pin_messages:
-        await bot.answer_callback_query(callback_query.id, "I don't have permission to pin messages.")
+        await bot.answer_callback_query(callback_query.id, _("I don't have permission to pin messages."))
         return
     if chat_member.status != 'creator' and (chat_member.status != 'administrator' or not chat_member.can_pin_messages):
-        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        await bot.answer_callback_query(callback_query.id, _("You don't have permission to do this."))
         return
     chat_id = int(callback_query.data.split()[2])
     pin_msg, chat_dict = db_analyzer(db, chat_id, "pin_msg", False)
@@ -268,11 +271,11 @@ async def pin_msg_handler(bot, callback_query: types.CallbackQuery, db, chat_mem
 
 async def clean_pinned_message_handler(bot, callback_query: types.CallbackQuery, db, chat_member, bot_member):
     if bot_member.status != 'administrator' or not bot_member.can_delete_messages:
-        await bot.answer_callback_query(callback_query.id, "I don't have permission to delete messages.")
+        await bot.answer_callback_query(callback_query.id, _("I don't have permission to delete messages."))
         return
     if chat_member.status != 'creator' and (
             chat_member.status != 'administrator' or not chat_member.can_delete_messages):
-        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        await bot.answer_callback_query(callback_query.id, _("You don't have permission to do this."))
         return
     chat_id = int(callback_query.data.split()[2])
     clean_pinned_message, chat_dict = db_analyzer(db, chat_id, "clean_pinned_message", False)
@@ -295,7 +298,7 @@ async def clean_pinned_message_handler(bot, callback_query: types.CallbackQuery,
 
 async def anonymous_vote_handler(bot, callback_query: types.CallbackQuery, db, chat_member):
     if chat_member.status != 'creator' and (chat_member.status != 'administrator' or not chat_member.can_change_info):
-        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        await bot.answer_callback_query(callback_query.id, _("You don't have permission to do this."))
         return
     chat_id = int(callback_query.data.split()[2])
     anonymous_vote, chat_dict = db_analyzer(db, chat_id, "anonymous_vote", True)

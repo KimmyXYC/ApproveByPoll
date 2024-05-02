@@ -4,6 +4,7 @@
 # @Software: PyCharm
 # @GitHub: KimmyXYC
 import asyncio
+import gettext
 from loguru import logger
 from telebot import util, types
 from telebot.async_telebot import AsyncTeleBot
@@ -11,6 +12,8 @@ from telebot.asyncio_storage import StateMemoryStorage
 from App import Event, DashBoard, KickRequest
 from App.JoinRequest import JoinRequest
 from utils.Tool import cal_md5
+
+_ = gettext.gettext
 
 
 class BotRunner(object):
@@ -45,36 +48,36 @@ class BotRunner(object):
             if message.chat.type in ["group", "supergroup"]:
                 await DashBoard.homepage(bot, message, self.db, self.bot_id)
             else:
-                await bot.reply_to(message, "Please use this command in the group.")
+                await bot.reply_to(message, _("Please use this command in the group."))
 
         @bot.message_handler(commands=["set_vote_time"])
         async def handle_command_set_vote_time(message: types.Message):
             if message.chat.type in ["group", "supergroup"]:
                 await Event.set_vote_time(bot, message, self.db)
             else:
-                await bot.reply_to(message, "Please use this command in the group.")
+                await bot.reply_to(message, _("Please use this command in the group."))
 
         @bot.message_handler(commands=["start_kick_vote"])
         async def handle_command_start_kick_vote(message: types.Message):
             if message.chat.type not in ["group", "supergroup"]:
-                await bot.reply_to(message, "Please use this command in the group.")
+                await bot.reply_to(message, _("Please use this command in the group."))
                 return
             chat_dict = self.db.get(str(message.chat.id))
             if chat_dict is None:
                 chat_dict = {}
             vote_to_kick = chat_dict.get("vote_to_kick", False)
             if not vote_to_kick:
-                await bot.reply_to(message, "Vote to kick is not enabled in this chat.")
+                await bot.reply_to(message, _("Vote to kick is not enabled in this chat."))
                 return
             if len(message.text.split()) == 1:
                 if message.reply_to_message is None:
-                    await bot.reply_to(message, "Malformed, expected /start_kick_vote [user_id] or reply to a user.")
+                    await bot.reply_to(message, _("Malformed, expected /start_kick_vote [user_id] or reply to a user."))
                     return
                 target_user_id = message.reply_to_message.from_user.id
             elif len(message.text.split()) == 2:
                 target_user_id = int(message.text.split()[1])
             else:
-                await bot.reply_to(message, "Malformed, expected /start_kick_vote [user_id] or reply to a user.")
+                await bot.reply_to(message, _("Malformed, expected /start_kick_vote [user_id] or reply to a user."))
                 return
             ostracism_id = cal_md5(f"{message.chat.id}@{target_user_id}")
             if ostracism_id in self.kick_tasks:

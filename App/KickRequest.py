@@ -4,9 +4,12 @@
 # @Software: PyCharm
 # @GitHub: KimmyXYC
 import asyncio
+import gettext
 from loguru import logger
 from telebot import types
 from utils.Tool import cal_md5
+
+_ = gettext.gettext
 
 
 class Ostracism:
@@ -36,14 +39,15 @@ class Ostracism:
         try:
             target_user_member = await bot.get_chat_member(self.chat_id, self.target_user_id)
         except Exception as e:
-            logger.error(f"User_id:{self.initiator_user_id} in Chat_id:{self.chat_id} want to kick ID:{self.target_user_id}: {e}")
-            await bot.reply_to(message, "Cannot find the target user.")
+            logger.error(
+                f"User_id:{self.initiator_user_id} in Chat_id:{self.chat_id} want to kick ID:{self.target_user_id}: {e}")
+            await bot.reply_to(message, _("Cannot find the target user."))
             return
         if target_user_member.status == 'creator' or target_user_member.status == 'administrator':
-            await bot.reply_to(message, "Cannot kick the administrator.")
+            await bot.reply_to(message, _("Cannot kick the administrator."))
             return
         elif target_user_member.status == 'none':
-            await bot.reply_to(message, "Cannot find the target user.")
+            await bot.reply_to(message, _("Cannot find the target user."))
             return
 
         self.ostracism_id = cal_md5(f"{self.chat_id}@{int(self.target_user_id)}")
@@ -61,11 +65,11 @@ class Ostracism:
             self.target_user_mention += "</a>"
 
         buttons = types.InlineKeyboardMarkup()
-        buttons.add(types.InlineKeyboardButton(text="Approve", callback_data=f"KR Approve {self.ostracism_id}"),
-                    types.InlineKeyboardButton(text="Cancel", callback_data=f"KR Cancel {self.ostracism_id}"))
+        buttons.add(types.InlineKeyboardButton(text=_("Approve"), callback_data=f"KR Approve {self.ostracism_id}"),
+                    types.InlineKeyboardButton(text=_("Cancel"), callback_data=f"KR Cancel {self.ostracism_id}"))
         self.start_msg = await bot.reply_to(
             message,
-            f"{self.initiator_user_mention} want to start a kick voting to user {self.target_user_mention}.",
+            "{} want to start a kick voting to user {}.".format(self.initiator_user_mention, self.target_user_mention),
             reply_markup=buttons,
             parse_mode="HTML"
         )
@@ -75,7 +79,7 @@ class Ostracism:
             await bot.edit_message_text(
                 chat_id=self.chat_id,
                 message_id=self.start_msg.message_id,
-                text="No one approve this kick voting."
+                text=_("No one approve this kick voting.")
             )
         self.finished = True
 
@@ -84,7 +88,7 @@ class Ostracism:
         if not callback_query.from_user.id == self.initiator_user_id:
             if not ((chat_member.status == 'administrator' and chat_member.can_restrict_members) or
                     chat_member.status == 'creator'):
-                await bot.answer_callback_query(callback_query.id, "You have no permission to do this.")
+                await bot.answer_callback_query(callback_query.id, _("You have no permission to do this."))
                 return
         admin_mention = f'<a href="tg://user?id={callback_query.from_user.id}">{callback_query.from_user.first_name}'
         if callback_query.from_user.last_name is not None:
@@ -92,23 +96,23 @@ class Ostracism:
         else:
             admin_mention += "</a>"
         if self.admin_status and action == "Approve":
-            await bot.answer_callback_query(callback_query.id, "Admin have already done this.")
+            await bot.answer_callback_query(callback_query.id, _("Admin have already done this."))
             return
         if action == "Approve":
             if callback_query.from_user.id == self.initiator_user_id:
                 if not ((chat_member.status == 'administrator' and chat_member.can_restrict_members) or
                         chat_member.status == 'creator'):
-                    await bot.answer_callback_query(callback_query.id, "You cannot approve your own request.")
+                    await bot.answer_callback_query(callback_query.id, _("You cannot approve your own request."))
                     return
             self.admin_status = True
         elif action == "Cancel":
             self.admin_status = True
             self.cancelled = True
-            await bot.answer_callback_query(callback_query.id, "Canceled.")
+            await bot.answer_callback_query(callback_query.id, _("Canceled."))
             await bot.edit_message_text(
                 chat_id=self.chat_id,
                 message_id=self.start_msg.message_id,
-                text=f"Kick voting to user {self.target_user_mention} was canceled by {admin_mention}.",
+                text=_("Kick voting to user {} was canceled by {}.").format(self.target_user_mention, admin_mention),
                 parse_mode="HTML"
             )
             self.finished = True
@@ -121,12 +125,12 @@ class Ostracism:
             return
 
         buttons = types.InlineKeyboardMarkup()
-        buttons.add(types.InlineKeyboardButton(text="Cancel", callback_data=f"KR Cancel {self.ostracism_id}"))
+        buttons.add(types.InlineKeyboardButton(text=_("Cancel"), callback_data=f"KR Cancel {self.ostracism_id}"))
         await bot.edit_message_text(
             chat_id=self.chat_id,
             message_id=self.start_msg.message_id,
-            text=f"Start kick voting to user {self.target_user_mention}."
-                 f"\nInitiator: {self.initiator_user_mention} Approver: {admin_mention}.",
+            text=_("Start kick voting to user {}.\nInitiator: {} Approver: {}.").format(
+                self.target_user_mention, self.initiator_user_mention, admin_mention),
             reply_markup=buttons,
             parse_mode="HTML"
         )
@@ -135,8 +139,8 @@ class Ostracism:
         status_pin_msg = chat_dict.get("pin_msg", False)
         anonymous_vote = chat_dict.get("anonymous_vote", True)
 
-        vote_question = "Kick out this user?"
-        vote_options = ["Yes", "No"]
+        vote_question = _("Kick out this user?")
+        vote_options = [_("Yes"), _("No")]
         self.polling = await bot.send_poll(
             self.chat_id,
             vote_question,
@@ -169,24 +173,28 @@ class Ostracism:
 
         if vote_message.total_voter_count == 0:
             logger.info(f"Ostracism {self.target_user_id}: No one voted in {self.chat_id}")
-            result_message = await bot.reply_to(self.start_msg, "No one voted.")
+            result_message = await bot.reply_to(self.start_msg, _("No one voted."))
             kick_user = False
-            edit_msg = f"Kick {self.target_user_mention} (ID: <code>{self.target_user_id}</code>): No one voted."
+            edit_msg = _("Kick {} (ID: <code>{}</code>): No one voted.").format(
+                self.target_user_mention, self.target_user_id)
         elif allow_count > deny_count:
             logger.info(f"Ostracism {self.target_user_id}: Kicking out in {self.chat_id}")
-            result_message = await bot.reply_to(self.start_msg, "Kick out.")
+            result_message = await bot.reply_to(self.start_msg, _("Kick out."))
             kick_user = True
-            edit_msg = f"Kick {self.target_user_mention} (ID: <code>{self.target_user_id}</code>): Kick out."
+            edit_msg = _("Kick {} (ID: <code>{}</code>): Kick out.").format(
+                self.target_user_mention, self.target_user_id)
         elif allow_count == deny_count:
             logger.info(f"Ostracism {self.target_user_id}: Tie in {self.chat_id}")
-            result_message = await bot.reply_to(self.start_msg, "Tie.")
+            result_message = await bot.reply_to(self.start_msg, _("Tie."))
             kick_user = False
-            edit_msg = f"Ostracism {self.target_user_mention} (ID: <code>{self.target_user_id}</code>): Tie."
+            edit_msg = _("Kick {} (ID: <code>{}</code>): Tie.").format(
+                self.target_user_mention, self.target_user_id)
         else:
             logger.info(f"Ostracism {self.target_user_id}: Not kicking out in {self.chat_id}")
-            result_message = await bot.reply_to(self.start_msg, "Not kicking out")
+            result_message = await bot.reply_to(self.start_msg, _("Not kicking out"))
             kick_user = False
-            edit_msg = f"Ostracism {self.target_user_mention} (ID: <code>{self.target_user_id}</code>): Not kicking out."
+            edit_msg = _("Kick {} (ID: <code>{}</code>): Not kicking out.").format(
+                self.target_user_mention, self.target_user_id)
 
         await bot.edit_message_text(
             chat_id=self.chat_id,
