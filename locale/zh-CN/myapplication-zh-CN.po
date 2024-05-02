@@ -1,0 +1,336 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: approvebypoll\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-02 08:53+0000\n"
+"PO-Revision-Date: 2024-05-02 10:07\n"
+"Last-Translator: \n"
+"Language-Team: Chinese Simplified\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Crowdin-Project: approvebypoll\n"
+"X-Crowdin-Project-ID: 671676\n"
+"X-Crowdin-Language: zh-CN\n"
+"X-Crowdin-File: myapplication.pot\n"
+"X-Crowdin-File-ID: 10\n"
+
+#: App/JoinRequest.py:64 App/DashBoard.py:41
+msgid "{} seconds"
+msgstr "{} 秒"
+
+#: App/JoinRequest.py:66 App/DashBoard.py:43
+msgid "{} minutes"
+msgstr "{} 分钟"
+
+#: App/JoinRequest.py:68 App/DashBoard.py:45
+msgid "{} minutes and {} seconds"
+msgstr "{} 分钟 {} 秒"
+
+#: App/JoinRequest.py:71
+msgid "You are applying to join 「{}」. The result will be communicated to you in {}."
+msgstr "您正在申请加入「{}」。结果将在 {} 后告知您。"
+
+#: App/JoinRequest.py:85 App/KickRequest.py:68
+msgid "Approve"
+msgstr "批准"
+
+#: App/JoinRequest.py:86
+msgid "Reject"
+msgstr "拒绝"
+
+#: App/JoinRequest.py:87
+msgid "Ban"
+msgstr "封禁"
+
+#: App/JoinRequest.py:90
+msgid "{} (ID: <code>{}</code>) is requesting to join this group."
+msgstr "{} (ID: <code>{}</code>) 正在请求加入群组"
+
+#: App/JoinRequest.py:95
+msgid "Alternate Link: {}"
+msgstr "备用链接：{}"
+
+#: App/JoinRequest.py:106
+msgid "Approve this user?"
+msgstr "批准此用户吗？"
+
+#: App/JoinRequest.py:107 App/KickRequest.py:143
+msgid "Yes"
+msgstr "是"
+
+#: App/JoinRequest.py:107 App/KickRequest.py:143
+msgid "No"
+msgstr "否"
+
+#: App/JoinRequest.py:144 App/KickRequest.py:176
+msgid "No one voted."
+msgstr "无人投票。"
+
+#: App/JoinRequest.py:146
+msgid "{} (ID: <code>{}</code>): No one voted."
+msgstr "{} (ID: <code>{}</code>)：无人投票。"
+
+#: App/JoinRequest.py:147
+msgid "No one voted. Please request again later."
+msgstr "无人投票。请稍后再次申请。"
+
+#: App/JoinRequest.py:150 App/JoinRequest.py:216
+msgid "Approved."
+msgstr "已同意"
+
+#: App/JoinRequest.py:152
+msgid "{} (ID: <code>{}</code>): Approved."
+msgstr "{} (ID: <code>{}</code>): 已同意"
+
+#: App/JoinRequest.py:153
+msgid "You have been approved."
+msgstr "您已被批准加入。"
+
+#: App/JoinRequest.py:156 App/KickRequest.py:188
+msgid "Tie."
+msgstr "平票。"
+
+#: App/JoinRequest.py:158
+msgid "{} (ID: <code>{}</code>): Tie."
+msgstr "{} (ID: <code>{}</code>)：平票。"
+
+#: App/JoinRequest.py:159
+msgid "Tie. Please request again later."
+msgstr "平票。请稍后再次申请。"
+
+#: App/JoinRequest.py:162 App/JoinRequest.py:225
+msgid "Denied."
+msgstr "已拒绝"
+
+#: App/JoinRequest.py:164
+msgid "{} (ID: <code>{}</code>): Denied."
+msgstr "{} (ID: <code>{}</code>)：已拒绝。"
+
+#: App/JoinRequest.py:165
+msgid "You have been denied."
+msgstr "您已被拒绝。"
+
+#: App/JoinRequest.py:199 App/KickRequest.py:91
+msgid "You have no permission to do this."
+msgstr "您没有权限这样做。"
+
+#: App/JoinRequest.py:204
+msgid "This request has been processed"
+msgstr "该请求已被处理"
+
+#: App/JoinRequest.py:219
+msgid "{} (ID: <code>{}</code>): Approved by {}"
+msgstr "{} (ID: <code>{}</code>): 由 {} 通过"
+
+#: App/JoinRequest.py:221
+msgid "Your application have been approved."
+msgstr "您的申请已被批准。"
+
+#: App/JoinRequest.py:228 App/JoinRequest.py:249
+msgid "{} (ID: <code>{}</code>): Denied by {}"
+msgstr "{} (ID: <code>{}</code>)：已被 {} 拒绝"
+
+#: App/JoinRequest.py:230 App/JoinRequest.py:242 App/JoinRequest.py:251
+msgid "Your application have been denied."
+msgstr "您的申请已被拒绝。"
+
+#: App/JoinRequest.py:240
+msgid "{} (ID: <code>{}</code>): Banned by {}"
+msgstr "{} (ID: <code>{}</code>)：已被 {} 封禁"
+
+#: App/JoinRequest.py:246
+msgid "Bot has no permission to ban."
+msgstr "机器人没有封禁的权限。"
+
+#: App/JoinRequest.py:253
+msgid "You have no permission to ban."
+msgstr "您没有封禁的权限。"
+
+#: App/Event.py:14
+msgid "Open-source repository:"
+msgstr "开源仓库："
+
+#: App/Event.py:16
+msgid "This is a Bot for voting to join the group."
+msgstr "这是一个投票入群机器人。"
+
+#: App/Event.py:29
+msgid "As an anonymous administrator, please use the Dashboard for this purpose."
+msgstr "作为匿名管理员，请使用仪表板以完成此操作。"
+
+#: App/Event.py:33 App/Event.py:47
+msgid "Malformed, expected /set_vote_time [time]"
+msgstr "用法不正确，预期用法 /set_vote_time [时间]"
+
+#: App/Event.py:38
+msgid "Time should be in range [10, 3600]"
+msgstr "时间应在 [10, 3600] 范围内"
+
+#: App/Event.py:40
+msgid "Set vote time to {} seconds"
+msgstr "已设置投票时间为 {} 秒"
+
+#: App/Event.py:49 App/DashBoard.py:97 App/DashBoard.py:115
+#: App/DashBoard.py:124 App/DashBoard.py:153 App/DashBoard.py:177
+#: App/DashBoard.py:200 App/DashBoard.py:228 App/DashBoard.py:251
+#: App/DashBoard.py:278 App/DashBoard.py:301
+msgid "You don't have permission to do this."
+msgstr "您无权进行此项操作。"
+
+#: App/DashBoard.py:16
+msgid "If you want to change the settings, please click the button below."
+msgstr "如果您想要更改设置，请点击下面的按钮。"
+
+#: App/DashBoard.py:48
+msgid "<b>Group Setting</b>\n"
+msgstr "<b>群组设置</b>\n"
+
+#: App/DashBoard.py:49
+msgid "<b>Vote To Join</b>: {}"
+msgstr "<b>投票加入</b>︰ {}"
+
+#: App/DashBoard.py:50
+msgid "<b>Vote To Kick</b>: {}"
+msgstr "<b>投票踢出</b>︰ {}"
+
+#: App/DashBoard.py:51
+msgid "<b>Vote Time</b>: {}"
+msgstr "<b>投票时间</b>︰ {}"
+
+#: App/DashBoard.py:52
+msgid "<b>Pin Vote Message</b>: {}"
+msgstr "<b>置顶投票消息</b>：{}"
+
+#: App/DashBoard.py:53
+msgid "<b>Clean Pinned Message</b>: {}"
+msgstr "<b>清理置顶的消息</b>： {}"
+
+#: App/DashBoard.py:54
+msgid "<b>Anonymous Vote</b>: {}"
+msgstr "<b>匿名投票</b>： {}"
+
+#: App/DashBoard.py:68
+msgid "{} Vote To Join"
+msgstr "{} 投票加入"
+
+#: App/DashBoard.py:70
+msgid "{} Vote To Kick"
+msgstr "{} 投票踢出"
+
+#: App/DashBoard.py:72
+msgid "Set Vote Time"
+msgstr "设置投票时间"
+
+#: App/DashBoard.py:74
+msgid "{} Pin Vote Message"
+msgstr "{} 置顶投票消息"
+
+#: App/DashBoard.py:76
+msgid "{} Clean Pinned Message"
+msgstr "{} 清理置顶的消息"
+
+#: App/DashBoard.py:78
+msgid "{} Anonymous Vote"
+msgstr "{} 匿名投票"
+
+#: App/DashBoard.py:80
+msgid "Close"
+msgstr "关闭"
+
+#: App/DashBoard.py:203
+msgid "If you want to change the vote time precisely, please use the command /set_vote_time"
+msgstr "如果您想要准确更改投票时间，请使用命令 /set_vote_time"
+
+#: App/DashBoard.py:215
+msgid "⬅️ Go Back"
+msgstr "⬅️ 返回"
+
+#: App/DashBoard.py:248
+msgid "I don't have permission to pin messages."
+msgstr "我没有置顶消息的权限。"
+
+#: App/DashBoard.py:274
+msgid "I don't have permission to delete messages."
+msgstr "我没有删除消息的权限。"
+
+#: App/KickRequest.py:44 App/KickRequest.py:50
+msgid "Cannot find the target user."
+msgstr "找不到目标用户。"
+
+#: App/KickRequest.py:47
+msgid "Cannot kick the administrator."
+msgstr "无法踢出管理员。"
+
+#: App/KickRequest.py:69 App/KickRequest.py:128
+msgid "Cancel"
+msgstr "取消"
+
+#: App/KickRequest.py:82
+msgid "No one approve this kick voting."
+msgstr "无人批准此踢出投票。"
+
+#: App/KickRequest.py:99
+msgid "Admin have already done this."
+msgstr "管理员已经这样做了。"
+
+#: App/KickRequest.py:105
+msgid "You cannot approve your own request."
+msgstr "您不能批准您自己的请求。"
+
+#: App/KickRequest.py:111
+msgid "Canceled."
+msgstr "已取消。"
+
+#: App/KickRequest.py:115
+msgid "Kick voting to user {} was canceled by {}."
+msgstr "踢出用户 {} 的投票已被 {} 取消。"
+
+#: App/KickRequest.py:132
+msgid "Start kick voting to user {}.\n"
+"Initiator: {} Approver: {}."
+msgstr "已开始对用户 {} 的踢出投票。\n"
+"发起人：{} 批准人：{}。"
+
+#: App/KickRequest.py:142
+msgid "Kick out this user?"
+msgstr "踢出此用户？"
+
+#: App/KickRequest.py:178
+msgid "Kick {} (ID: <code>{}</code>): No one voted."
+msgstr "踢出 {} (ID: <code>{}</code>)：无人投票。"
+
+#: App/KickRequest.py:182
+msgid "Kick out."
+msgstr "已踢出。"
+
+#: App/KickRequest.py:184
+msgid "Kick {} (ID: <code>{}</code>): Kick out."
+msgstr "踢出 {} (ID: <code>{}</code>)：已踢出。"
+
+#: App/KickRequest.py:190
+msgid "Kick {} (ID: <code>{}</code>): Tie."
+msgstr "踢出 {} (ID: <code>{}</code>)：平票。"
+
+#: App/KickRequest.py:194
+msgid "Not kicking out"
+msgstr "没有踢出"
+
+#: App/KickRequest.py:196
+msgid "Kick {} (ID: <code>{}</code>): Not kicking out."
+msgstr "踢出 {} (ID: <code>{}</code>)：没有踢出。"
+
+#: App/Controller.py:51 App/Controller.py:58 App/Controller.py:63
+msgid "Please use this command in the group."
+msgstr "请在群组中使用此命令。"
+
+#: App/Controller.py:70
+msgid "Vote to kick is not enabled in this chat."
+msgstr "此聊天中未启用投票踢出。"
+
+#: App/Controller.py:74 App/Controller.py:80
+msgid "Malformed, expected /start_kick_vote [user_id] or reply to a user."
+msgstr "用法不正确，预期用法 /start_kick_vote [用户 ID] 或直接回复一个用户。"
+

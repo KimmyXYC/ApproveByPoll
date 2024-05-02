@@ -45,3 +45,7 @@ docker run -d --name approvebypoll -v $(pwd)/Config:/app/Config ghcr.io/kimmyxyc
 ## 注意 / Attention
 - 机器人必须有邀请用户，封禁用户，删除消息，置顶消息的权限。
 - The robot must have the permission to invite users, ban users, delete messages, and pin messages.
+
+## 语言开发 / Language Development
+- 本项目使用 crowdin 进行多语言翻译，如对语言有建议/想要贡献新的语言请至项目地址: https://crwd.in/approvebypoll/  
+- This project uses crowdin for multilingual translation. If you have any suggestions for language/contribute new language, please go to the project address: https://crwd.in/approvebypoll/
