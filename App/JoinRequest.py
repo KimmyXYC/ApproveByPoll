@@ -191,7 +191,8 @@ class JoinRequest:
         chat_member = await bot.get_chat_member(self.chat_id, callback_query.from_user.id)
 
         # Check permission
-        if not ((chat_member.status == 'administrator' and chat_member.can_invite_users) or
+        if not ((chat_member.status == 'administrator' and chat_member.can_invite_users) or 
+                chat_member.can_restrict_members or
                 chat_member.status == 'creator'):
             await bot.answer_callback_query(callback_query.id, "You have no permission to do this.")
             return
