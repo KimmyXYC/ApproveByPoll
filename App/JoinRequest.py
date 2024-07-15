@@ -196,7 +196,7 @@ class JoinRequest:
                 await bot.answer_callback_query(callback_query.id, "You have no permission to do this.")
                 return
             if action in ["Approve", "Reject"]:
-                if not (chat_member.status == 'administrator' and chat_member.can_invite_users):
+                if not chat_member.can_invite_users:
                     await bot.answer_callback_query(callback_query.id, "You have no permission to do this.")
                     return
             elif action == "Ban":
