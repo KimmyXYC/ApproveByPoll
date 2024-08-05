@@ -57,15 +57,16 @@ class JoinRequest:
         # Time format
         minutes = vote_time // 60
         seconds = vote_time % 60
-        if minutes == 0:
-            _cn_time = f"{seconds}秒"
-            _en_time = f"{seconds} seconds"
-        elif seconds == 0:
-            _cn_time = f"{minutes}分钟"
-            _en_time = f"{minutes} minutes"
-        else:
-            _cn_time = f"{minutes}分钟{seconds}秒"
-            _en_time = f"{minutes} minutes and {seconds} seconds"
+        cn_parts = []
+        en_parts = []
+        if minutes > 0:
+            cn_parts.append(f"{minutes}分钟")
+            en_parts.append(f"{minutes} minute{'s' if minutes > 1 else ''}")
+        if seconds > 0:
+            cn_parts.append(f"{seconds}秒")
+            en_parts.append(f"{seconds} second{'s' if seconds > 1 else ''}")
+        _cn_time = ''.join(cn_parts) if cn_parts else "0秒"
+        _en_time = ' and '.join(en_parts) if en_parts else "0 seconds"
 
         # Send message to user
         _zh_info = f"您正在申请加入「{request.chat.title}」，结果将于 {_cn_time} 后告知您。"

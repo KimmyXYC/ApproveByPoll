@@ -27,7 +27,7 @@ class BotRunner(object):
         bot = AsyncTeleBot(self.bot.botToken, state_storage=StateMemoryStorage())
         return bot, self.bot
 
-    def run(self):
+    async def run(self):
         # print(self.bot)
         logger.success("Bot Start")
         bot, _config = self.botcreate()
@@ -35,30 +35,29 @@ class BotRunner(object):
             from telebot import asyncio_helper
             asyncio_helper.proxy = self.proxy.url
             logger.success("Proxy Set")
+        await self.bot.set_my_commands([
+            types.BotCommand("help", "Show help"),
+        ], scope=types.BotCommandScopeAllPrivateChats())
+        await self.bot.set_my_commands([
+            types.BotCommand("setting", "Open Settings Dashboard"),
+            types.BotCommand("set_vote_time", "Setting the polling time (unit: s)"),
+            types.BotCommand("start_kick_vote", "Initiate a banishment"),
+        ], scope=types.BotCommandScopeChat())
 
         @bot.message_handler(commands=["start", "help"], chat_types=['private'])
         async def handle_command(message: types.Message):
             await Event.start(bot, message)
 
-        @bot.message_handler(commands=["setting"])
+        @bot.message_handler(commands=["setting"], chat_types=['group', 'supergroup'])
         async def handle_command_setting(message: types.Message):
-            if message.chat.type in ["group", "supergroup"]:
-                await DashBoard.homepage(bot, message, self.db, self.bot_id)
-            else:
-                await bot.reply_to(message, "Please use this command in the group.")
+            await DashBoard.homepage(bot, message, self.db, self.bot_id)
 
-        @bot.message_handler(commands=["set_vote_time"])
+        @bot.message_handler(commands=["set_vote_time"], chat_types=['group', 'supergroup'])
         async def handle_command_set_vote_time(message: types.Message):
-            if message.chat.type in ["group", "supergroup"]:
-                await Event.set_vote_time(bot, message, self.db)
-            else:
-                await bot.reply_to(message, "Please use this command in the group.")
+            await Event.set_vote_time(bot, message, self.db)
 
-        @bot.message_handler(commands=["start_kick_vote"])
+        @bot.message_handler(commands=["start_kick_vote"], chat_types=['group', 'supergroup'])
         async def handle_command_start_kick_vote(message: types.Message):
-            if message.chat.type not in ["group", "supergroup"]:
-                await bot.reply_to(message, "Please use this command in the group.")
-                return
             chat_dict = self.db.get(str(message.chat.id))
             if chat_dict is None:
                 chat_dict = {}
@@ -85,7 +84,7 @@ class BotRunner(object):
             self.kick_tasks[ostracism_id] = ostracism_task
             await ostracism_task.start_kick_vote(bot, message)
 
-        @bot.message_handler(content_types=['pinned_message'])
+        @bot.message_handler(content_types=['pinned_message'], chat_types=['group', 'supergroup'])
         async def delete_pinned_message(message: types.Message):
             status = self.db.get(str(message.chat.id))
             if not status:

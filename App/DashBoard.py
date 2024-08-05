@@ -34,26 +34,23 @@ def message_creator(chat_id, db, addition=ADDITION):
     # Time format
     minutes = vote_time // 60
     seconds = vote_time % 60
-    if minutes == 0:
-        _time = f"{seconds} seconds"
-    elif seconds == 0:
-        _time = f"{minutes} minutes"
-    else:
-        _time = f"{minutes} minutes and {seconds} seconds"
+    time_parts = []
+    if minutes > 0:
+        time_parts.append(f"{minutes} minute{'s' if minutes > 1 else ''}")
+    if seconds > 0:
+        time_parts.append(f"{seconds} second{'s' if seconds > 1 else ''}")
+    _time = " and ".join(time_parts) if time_parts else "0 seconds"
 
-    reply_message = f"""
-<b>Group Setting</b>
-
-<b>Vote To Join</b>: {vote_to_join}
-<b>Vote To Kick</b>: {vote_to_kick}
-<b>Vote Time</b>: {_time}
-<b>Pin Vote Message</b>: {pin_msg}
-<b>Clean Pinned Message</b>: {clean_pinned_message}
-<b>Anonymous Vote</b>: {anonymous_vote}
-        """
-    if addition:
-        reply_message += "\n"
-        reply_message += addition
+    reply_message = (
+            f"<b>Group Setting</b>\n\n"
+            f"<b>Vote To Join</b>: {vote_to_join}\n"
+            f"<b>Vote To Kick</b>: {vote_to_kick}\n"
+            f"<b>Vote Time</b>: {_time}\n"
+            f"<b>Pin Vote Message</b>: {pin_msg}\n"
+            f"<b>Clean Pinned Message</b>: {clean_pinned_message}\n"
+            f"<b>Anonymous Vote</b>: {anonymous_vote}"
+    )
+    reply_message += f"\n{addition}" if addition else ""
 
     buttons = button_creator(vote_to_join, vote_to_kick, pin_msg, clean_pinned_message, chat_id, anonymous_vote)
 
