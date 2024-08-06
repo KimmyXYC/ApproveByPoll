@@ -1,18 +1,35 @@
-from pathlib import Path
-from utils.Base import ReadConfig
-from App.Controller import BotRunner
-from loguru import logger
+import asyncio
 import sys
 import elara
 
+from dotenv import load_dotenv
+from loguru import logger
+
+from app.Controller import BotRunner
+from app_conf import settings
+
+load_dotenv()
+# 移除默认的日志处理器
 logger.remove()
-handler_id = logger.add(sys.stderr, level="INFO")
-logger.add(sink='run.log',
-           format="{time} - {level} - {message}",
-           level="INFO",
-           rotation="20 MB",
-           enqueue=True)
-db = elara.exe(path="Config/chat.db", commitdb=True)
-config = ReadConfig().parse_file(str(Path.cwd()) + "/Config/app.toml", to_obj=True)
-App = BotRunner(config, db)
-App.run()
+# 添加标准输出
+print("从配置文件中读取到的DEBUG为", settings.app.debug)
+handler_id = logger.add(sys.stderr, level="INFO" if not settings.app.debug else "DEBUG")
+# 添加文件写出
+logger.add(
+    sink="run.log",
+    format="{time} - {level} - {message}",
+    level="INFO",
+    rotation="100 MB",
+    enqueue=True,
+)
+
+logger.info("Log Is Secret, Please Don't Share It To Others")
+db = elara.exe(path="conf_dir/chat.db", commitdb=True)
+
+
+async def main():
+    await asyncio.gather(BotRunner(db).run())
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())

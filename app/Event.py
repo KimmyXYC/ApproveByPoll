@@ -3,13 +3,12 @@
 # @FileName: Event.py
 # @Software: PyCharm
 # @GitHub: KimmyXYC
-from loguru import logger
 from telebot import types
 
 
 async def start(bot, message: types.Message):
     _url = "https://github.com/KimmyXYC/ApproveByPoll"
-    _info = f"This is a Bot for voting to join the group."
+    _info = "This is a Bot for voting to join the group."
     await bot.reply_to(
         message,
         f"{_info}\n\nOpen-source repository: {_url}",
