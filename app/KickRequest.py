@@ -6,7 +6,6 @@
 import asyncio
 from loguru import logger
 from telebot import types
-from utils.Tool import cal_md5
 
 
 class Ostracism:
@@ -36,7 +35,8 @@ class Ostracism:
         try:
             target_user_member = await bot.get_chat_member(self.chat_id, self.target_user_id)
         except Exception as e:
-            logger.error(f"User_id:{self.initiator_user_id} in Chat_id:{self.chat_id} want to kick ID:{self.target_user_id}: {e}")
+            logger.error(f"User_id:{self.initiator_user_id} in Chat_id:{self.chat_id} "
+                         f"want to kick ID:{self.target_user_id}: {e}")
             await bot.reply_to(message, "Cannot find the target user.")
             return
         if target_user_member.status == 'creator' or target_user_member.status == 'administrator':
@@ -46,7 +46,7 @@ class Ostracism:
             await bot.reply_to(message, "Cannot find the target user.")
             return
 
-        self.ostracism_id = cal_md5(f"{self.chat_id}@{int(self.target_user_id)}")
+        self.ostracism_id = f"{self.chat_id}@{int(self.target_user_id)}"
 
         self.initiator_user_mention = f'<a href="tg://user?id={self.initiator_user_id}">{message.from_user.first_name}'
         if message.from_user.last_name is not None:
@@ -187,7 +187,8 @@ class Ostracism:
             logger.info(f"Ostracism {self.target_user_id}: Not kicking out in {self.chat_id}")
             result_message = await bot.reply_to(self.start_msg, "Not kicking out")
             kick_user = False
-            edit_msg = f"Ostracism {self.target_user_mention} (ID: <code>{self.target_user_id}</code>): Not kicking out."
+            edit_msg = (f"Ostracism {self.target_user_mention} "
+                        f"(ID: <code>{self.target_user_id}</code>): Not kicking out.")
 
         await bot.edit_message_text(
             chat_id=self.chat_id,

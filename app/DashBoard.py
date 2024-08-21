@@ -34,26 +34,23 @@ def message_creator(chat_id, db, addition=ADDITION):
     # Time format
     minutes = vote_time // 60
     seconds = vote_time % 60
-    if minutes == 0:
-        _time = f"{seconds} seconds"
-    elif seconds == 0:
-        _time = f"{minutes} minutes"
-    else:
-        _time = f"{minutes} minutes and {seconds} seconds"
+    time_parts = []
+    if minutes > 0:
+        time_parts.append(f"{minutes} minute{'s' if minutes > 1 else ''}")
+    if seconds > 0:
+        time_parts.append(f"{seconds} second{'s' if seconds > 1 else ''}")
+    _time = " and ".join(time_parts) if time_parts else "0 seconds"
 
-    reply_message = f"""
-<b>Group Setting</b>
-
-<b>Vote To Join</b>: {vote_to_join}
-<b>Vote To Kick</b>: {vote_to_kick}
-<b>Vote Time</b>: {_time}
-<b>Pin Vote Message</b>: {pin_msg}
-<b>Clean Pinned Message</b>: {clean_pinned_message}
-<b>Anonymous Vote</b>: {anonymous_vote}
-        """
-    if addition:
-        reply_message += "\n"
-        reply_message += addition
+    reply_message = (
+            f"<b>Group Setting</b>\n\n"
+            f"<b>Vote To Join</b>: {vote_to_join}\n"
+            f"<b>Vote To Kick</b>: {vote_to_kick}\n"
+            f"<b>Vote Time</b>: {_time}\n"
+            f"<b>Pin Vote Message</b>: {pin_msg}\n"
+            f"<b>Clean Pinned Message</b>: {clean_pinned_message}\n"
+            f"<b>Anonymous Vote</b>: {anonymous_vote}"
+    )
+    reply_message += f"\n{addition}" if addition else ""
 
     buttons = button_creator(vote_to_join, vote_to_kick, pin_msg, clean_pinned_message, chat_id, anonymous_vote)
 
@@ -66,7 +63,7 @@ def button_creator(vote_to_join, vote_to_kick, pin_msg, clean_pinned_message, ch
                                            callback_data=f"Setting vote_to_join {chat_id}"),
                 types.InlineKeyboardButton(f"{FORMAT.get(vote_to_kick)} Vote To Kick",
                                            callback_data=f"Setting vote_to_kick {chat_id}"))
-    buttons.add(types.InlineKeyboardButton(f"Set Vote Time",
+    buttons.add(types.InlineKeyboardButton("Set Vote Time",
                                            callback_data=f"Setting vote_time {chat_id}"))
     buttons.add(types.InlineKeyboardButton(f"{FORMAT.get(pin_msg)} Pin Vote Message",
                                            callback_data=f"Setting pin_msg {chat_id}"),
@@ -200,15 +197,15 @@ async def vote_time_handler(bot, callback_query: types.CallbackQuery, db, chat_m
     addition = "If you want to change the vote time precisely, please use the command /set_vote_time"
     reply_message, _ = message_creator(chat_id, db, addition)
     buttons = types.InlineKeyboardMarkup()
-    buttons.add(types.InlineKeyboardButton(f"1 min", callback_data=f"Setting edit_vote_time {chat_id} 60"),
-                types.InlineKeyboardButton(f"2 min", callback_data=f"Setting edit_vote_time {chat_id} 120"),
-                types.InlineKeyboardButton(f"3 min", callback_data=f"Setting edit_vote_time {chat_id} 180"))
-    buttons.add(types.InlineKeyboardButton(f"5min", callback_data=f"Setting edit_vote_time {chat_id} 300"),
-                types.InlineKeyboardButton(f"10min", callback_data=f"Setting edit_vote_time {chat_id} 600"),
-                types.InlineKeyboardButton(f"15min", callback_data=f"Setting edit_vote_time {chat_id} 900"))
-    buttons.add(types.InlineKeyboardButton(f"20min", callback_data=f"Setting edit_vote_time {chat_id} 1200"),
-                types.InlineKeyboardButton(f"30min", callback_data=f"Setting edit_vote_time {chat_id} 1800"),
-                types.InlineKeyboardButton(f"60min", callback_data=f"Setting edit_vote_time {chat_id} 3600"))
+    buttons.add(types.InlineKeyboardButton("1 min", callback_data=f"Setting edit_vote_time {chat_id} 60"),
+                types.InlineKeyboardButton("2 min", callback_data=f"Setting edit_vote_time {chat_id} 120"),
+                types.InlineKeyboardButton("3 min", callback_data=f"Setting edit_vote_time {chat_id} 180"))
+    buttons.add(types.InlineKeyboardButton("5min", callback_data=f"Setting edit_vote_time {chat_id} 300"),
+                types.InlineKeyboardButton("10min", callback_data=f"Setting edit_vote_time {chat_id} 600"),
+                types.InlineKeyboardButton("15min", callback_data=f"Setting edit_vote_time {chat_id} 900"))
+    buttons.add(types.InlineKeyboardButton("20min", callback_data=f"Setting edit_vote_time {chat_id} 1200"),
+                types.InlineKeyboardButton("30min", callback_data=f"Setting edit_vote_time {chat_id} 1800"),
+                types.InlineKeyboardButton("60min", callback_data=f"Setting edit_vote_time {chat_id} 3600"))
     buttons.add(types.InlineKeyboardButton("⬅️ Go Back", callback_data="Setting back"))
     await bot.edit_message_text(
         reply_message,
