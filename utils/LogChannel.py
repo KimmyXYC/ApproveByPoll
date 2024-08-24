@@ -7,7 +7,7 @@ from loguru import logger
 from telebot import types
 
 
-async def log_c(bot, request: types.ChatJoinRequest, log_type, config, admin_mention=None):
+async def log_c(bot, request: types.ChatJoinRequest, log_type, channel_id, admin_mention=None):
     mention = f'<a href="tg://user?id={request.from_user.id}">{request.from_user.first_name}'
     if request.from_user.last_name is not None:
         mention += f" {request.from_user.last_name}"
@@ -20,8 +20,8 @@ async def log_c(bot, request: types.ChatJoinRequest, log_type, config, admin_men
     )
 
     if admin_mention is not None:
-        message += f"<b>Admin</b>: {admin_mention}"
+        message += f"\n<b>Admin</b>: {admin_mention}"
     try:
-        await bot.send_message(config.channel, message, parse_mode="HTML")
+        await bot.send_message(channel_id, message, parse_mode="HTML")
     except Exception as e:
         logger.error(f"Cannot send message to log channel: {e}")

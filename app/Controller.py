@@ -47,7 +47,7 @@ class BotRunner(object):
             types.BotCommand("setting", "Open Settings Dashboard"),
             types.BotCommand("set_vote_time", "Setting the polling time (unit: s)"),
             types.BotCommand("start_kick_vote", "Initiate a banishment"),
-        ], scope=types.BotCommandScopeChat())
+        ], scope=types.BotCommandScopeAllGroupChats())
 
         @bot.message_handler(commands=["start", "help"], chat_types=['private'])
         async def handle_command(message: types.Message):
