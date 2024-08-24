@@ -26,7 +26,7 @@ class LogChannel:
             f"<b>User</b>: {mention}\n"
             f"<b>User ID</b>: <code>{request.from_user.id}</code>"
         )
-        message_text = self.message_text + f"\n<b>Status</b>: Pending"
+        message_text = self.message_text + "\n<b>Status</b>: Pending"
         try:
             self.message = await self.bot.send_message(self.channel_id, message_text, parse_mode="HTML")
         except Exception as e:
@@ -45,7 +45,7 @@ class LogChannel:
     async def update_log(self, status, allow_count, deny_count):
         self.message_text += (
             f"\n<b>Status</b>: {status}\n"
-            f"<b>Result</b>Allow : Deny = {allow_count} : {deny_count}"
+            f"<b>Result</b>: Allow : Deny = {allow_count} : {deny_count}"
         )
         try:
             await self.bot.edit_message_text(self.message_text, self.channel_id, self.message.message_id, parse_mode="HTML")
