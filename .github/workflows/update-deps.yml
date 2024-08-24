@@ -17,3 +17,5 @@ jobs:
 
       - name: Update dependencies
         uses: pdm-project/update-deps-action@main
+        with:
+          sign-off-commit: true
