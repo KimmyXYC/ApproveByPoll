@@ -144,6 +144,7 @@ class Ostracism:
             is_anonymous=anonymous_vote,
             allows_multiple_answers=False,
             reply_to_message_id=self.start_msg.message_id,
+            protect_content=True
         )
 
         if status_pin_msg and self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
