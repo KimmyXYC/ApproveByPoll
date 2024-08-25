@@ -167,24 +167,25 @@ class JoinRequest:
             user_reply_msg = "您的申请已被拒绝。\nYou have been denied."
 
         # Process the request
+        edit_task = bot.edit_message_text(edit_msg, chat_id=self.chat_id,
+                                          message_id=notice_message.message_id, parse_mode="HTML")
+        reply_task = bot.reply_to(self.user_message, user_reply_msg)
+        if approve_user:
+            log_task = self.LogChannel.update_log("Approved", allow_count, deny_count)
+            request_task = bot.approve_chat_join_request(request.chat.id, request.from_user.id)
+        else:
+            log_task = self.LogChannel.update_log("Denied", allow_count, deny_count)
+            request_task = bot.decline_chat_join_request(request.chat.id, request.from_user.id)
         try:
-            await bot.edit_message_text(edit_msg, chat_id=self.chat_id,
-                                        message_id=notice_message.message_id, parse_mode="HTML")
+            await asyncio.gather(
+                edit_task,
+                reply_task,
+                log_task,
+                request_task
+            )
         except Exception as e:
-            logger.error(f"Edit message in Chat_id:{self.chat_id}: {e}")
-        try:
-            await bot.reply_to(self.user_message, user_reply_msg)
-        except Exception as e:
-            logger.error(f"Send message to User_id:{self.user_id}: {e}")
-        try:
-            if approve_user:
-                await self.LogChannel.update_log("Approved", allow_count, deny_count)
-                await bot.approve_chat_join_request(request.chat.id, request.from_user.id)
-            else:
-                await self.LogChannel.update_log("Denied", allow_count, deny_count)
-                await bot.decline_chat_join_request(request.chat.id, request.from_user.id)
-        except Exception as e:
-            logger.error(f"Process request User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
+            logger.error(f"An error occurred during processing: {e}")
+
         self.finished = True
 
         await asyncio.sleep(60)
@@ -260,20 +261,21 @@ class JoinRequest:
             logger.error(f"Unknown action: {action}")
             return
 
-        await bot.edit_message_text(edit_msg, chat_id=self.chat_id,
-                                    message_id=self.notice_message.message_id, parse_mode="HTML")
+        edit_task = bot.edit_message_text(edit_msg, chat_id=self.chat_id,
+                                          message_id=self.notice_message.message_id, parse_mode="HTML")
+        reply_task = bot.reply_to(self.user_message, reply_msg)
+        if approve_user:
+            request_task = bot.approve_chat_join_request(self.request.chat.id, self.request.from_user.id)
+        else:
+            request_task = bot.decline_chat_join_request(self.request.chat.id, self.request.from_user.id)
+        stop_poll_task = bot.stop_poll(self.request.chat.id, self.polling.message_id)
         try:
-            await bot.reply_to(self.user_message, reply_msg)
+            await asyncio.gather(
+                edit_task,
+                reply_task,
+                request_task,
+                stop_poll_task
+            )
         except Exception as e:
-            logger.error(f"Send message to User_id:{self.user_id}: {e}")
-        try:
-            if approve_user:
-                await bot.approve_chat_join_request(self.request.chat.id, self.request.from_user.id)
-            else:
-                await bot.decline_chat_join_request(self.request.chat.id, self.request.from_user.id)
-        except Exception as e:
-            logger.error(f"Process request User_id:{self.user_id} in Chat_id:{self.chat_id}: {e}")
-
-        # Clean up
-        await bot.stop_poll(self.chat_id, self.polling.message_id)
+            logger.error(f"An error occurred: {e}")
         await bot.delete_message(chat_id=self.chat_id, message_id=self.polling.message_id)
