@@ -31,6 +31,7 @@ def message_creator(chat_id, db, addition=ADDITION):
     vote_time = chat_dict.get("vote_time", 600)
     clean_pinned_message = chat_dict.get("clean_pinned_message", False)
     anonymous_vote = chat_dict.get("anonymous_vote", True)
+    advanced_vote = chat_dict.get("advanced_vote", False)
     # Time format
     minutes = vote_time // 60
     seconds = vote_time % 60
@@ -48,16 +49,17 @@ def message_creator(chat_id, db, addition=ADDITION):
             f"<b>Vote Time</b>: {_time}\n"
             f"<b>Pin Vote Message</b>: {pin_msg}\n"
             f"<b>Clean Pinned Message</b>: {clean_pinned_message}\n"
-            f"<b>Anonymous Vote</b>: {anonymous_vote}"
+            f"<b>Anonymous Vote</b>: {anonymous_vote}\n"
+            f"<b>Advanced Vote</b>: {advanced_vote}"
     )
     reply_message += f"\n{addition}" if addition else ""
 
-    buttons = button_creator(vote_to_join, vote_to_kick, pin_msg, clean_pinned_message, chat_id, anonymous_vote)
+    buttons = button_creator(vote_to_join, vote_to_kick, pin_msg, clean_pinned_message, chat_id, anonymous_vote, advanced_vote)
 
     return reply_message, buttons
 
 
-def button_creator(vote_to_join, vote_to_kick, pin_msg, clean_pinned_message, chat_id, anonymous_vote):
+def button_creator(vote_to_join, vote_to_kick, pin_msg, clean_pinned_message, chat_id, anonymous_vote, advanced_vote):
     buttons = types.InlineKeyboardMarkup()
     buttons.add(types.InlineKeyboardButton(f"{FORMAT.get(vote_to_join)} Vote To Join",
                                            callback_data=f"Setting vote_to_join {chat_id}"),
@@ -70,7 +72,9 @@ def button_creator(vote_to_join, vote_to_kick, pin_msg, clean_pinned_message, ch
                 types.InlineKeyboardButton(f"{FORMAT.get(clean_pinned_message)} Clean Pinned Message",
                                            callback_data=f"Setting clean_pinned_message {chat_id}"))
     buttons.add(types.InlineKeyboardButton(f"{FORMAT.get(anonymous_vote)} Anonymous Vote",
-                                           callback_data=f"Setting anonymous_vote {chat_id}"))
+                                           callback_data=f"Setting anonymous_vote {chat_id}"),
+                types.InlineKeyboardButton(f"{FORMAT.get(advanced_vote)} Advanced Vote",
+                                           callback_data=f"Setting advanced_vote {chat_id}"))
     buttons.add(types.InlineKeyboardButton("Close", callback_data="Setting close"))
     return buttons
 
@@ -131,6 +135,8 @@ async def command_handler(bot, callback_query: types.CallbackQuery, db, bot_id):
         await clean_pinned_message_handler(bot, callback_query, db, chat_member, bot_member)
     elif requests_type == "anonymous_vote":
         await anonymous_vote_handler(bot, callback_query, db, chat_member)
+    elif requests_type == "advanced_vote":
+        await advanced_vote_handler(bot, callback_query, db, chat_member)
     elif requests_type == "back":
         await homepage_back(bot, callback_query, db, chat_member)
     elif requests_type == "close":
@@ -301,6 +307,29 @@ async def anonymous_vote_handler(bot, callback_query: types.CallbackQuery, db, c
         db.set(str(chat_id), chat_dict)
     else:
         chat_dict["anonymous_vote"] = True
+        db.set(str(chat_id), chat_dict)
+    reply_message, buttons = message_creator(chat_id, db)
+    await bot.edit_message_text(
+        reply_message,
+        callback_query.message.chat.id,
+        callback_query.message.message_id,
+        parse_mode="HTML",
+        reply_markup=buttons,
+        disable_web_page_preview=True
+    )
+
+
+async def advanced_vote_handler(bot, callback_query: types.CallbackQuery, db, chat_member):
+    if chat_member.status != 'creator' and (chat_member.status != 'administrator' or not chat_member.can_change_info):
+        await bot.answer_callback_query(callback_query.id, "You don't have permission to do this.")
+        return
+    chat_id = int(callback_query.data.split()[2])
+    advanced_vote, chat_dict = db_analyzer(db, chat_id, "advanced_vote", False)
+    if advanced_vote:
+        chat_dict["advanced_vote"] = False
+        db.set(str(chat_id), chat_dict)
+    else:
+        chat_dict["advanced_vote"] = True
         db.set(str(chat_id), chat_dict)
     reply_message, buttons = message_creator(chat_id, db)
     await bot.edit_message_text(

@@ -7,6 +7,7 @@ import asyncio
 from loguru import logger
 from telebot import types
 from utils.LogChannel import LogChannel
+from app.PollButton import PollButton
 
 
 class JoinRequest:
@@ -28,9 +29,18 @@ class JoinRequest:
         self.user_mention = None
 
         self.LogChannel = None
+        self.PollButton = None
 
     def check_up_status(self):
-        return self.finished 
+        return self.finished
+
+    def get_poll_result(self, message):
+        if self.PollButton is None:
+            return None
+        allow_count, deny_count = self.PollButton.get_result(message.from_user.id)
+        if allow_count == -1:
+            return "Results are only available after voting"
+        return f"{self.request.chat.title}\nAllow : Deny = {allow_count} : {deny_count}"
 
     async def handle_join_request(self, bot, request: types.ChatJoinRequest, db):
         self.LogChannel = LogChannel(bot, self.log_channel_id)
@@ -56,6 +66,7 @@ class JoinRequest:
         status_pin_msg = chat_dict.get("pin_msg", False)
         vote_time = chat_dict.get("vote_time", 600)
         anonymous_vote = chat_dict.get("anonymous_vote", True)
+        advanced_vote = chat_dict.get("advanced_vote", False)
 
         # Time format
         minutes = vote_time // 60
@@ -104,17 +115,28 @@ class JoinRequest:
         self.notice_message = notice_message
 
         # Polling
-        vote_question = "Approve this user?"
-        vote_options = ["Yes", "No"]
-        self.polling = await bot.send_poll(
-            self.chat_id,
-            vote_question,
-            vote_options,
-            is_anonymous=anonymous_vote,
-            allows_multiple_answers=False,
-            reply_to_message_id=notice_message.message_id,
-            protect_content=True,
-        )
+        if advanced_vote:
+            self.PollButton = PollButton(join_request_id)
+            keyboard = self.PollButton.button_create()
+            self.polling = await bot.send_message(
+                self.chat_id,
+                "Approve this user?",
+                reply_markup=keyboard,
+                parse_mode="HTML",
+                protect_content=True,
+            )
+        else:
+            vote_question = "Approve this user?"
+            vote_options = ["Yes", "No"]
+            self.polling = await bot.send_poll(
+                self.chat_id,
+                vote_question,
+                vote_options,
+                is_anonymous=anonymous_vote,
+                allows_multiple_answers=False,
+                reply_to_message_id=notice_message.message_id,
+                protect_content=True,
+            )
 
         if status_pin_msg and self.bot_member.status == 'administrator' and self.bot_member.can_pin_messages:
             await bot.pin_chat_message(
@@ -136,12 +158,15 @@ class JoinRequest:
             )
 
         # Get vote result
-        vote_message = await bot.stop_poll(request.chat.id, self.polling.message_id)
-        allow_count = vote_message.options[0].voter_count
-        deny_count = vote_message.options[1].voter_count
+        if advanced_vote:
+            allow_count, deny_count = self.PollButton.stop_poll()
+        else:
+            vote_message = await bot.stop_poll(request.chat.id, self.polling.message_id)
+            allow_count = vote_message.options[0].voter_count
+            deny_count = vote_message.options[1].voter_count
 
         # Process the vote result
-        if vote_message.total_voter_count == 0:
+        if allow_count + deny_count == 0:
             logger.info(f"{self.user_id}: No one voted in {self.chat_id}")
             result_message = bot.reply_to(notice_message, "No one voted.")
             approve_user = False
@@ -167,6 +192,9 @@ class JoinRequest:
             user_reply_msg = "您的申请已被拒绝。\nYou have been denied."
 
         # Process the request
+        if self.PollButton is not None:
+            await bot.edit_message_text(f"Poll has ended\nAllow : Deny = {allow_count} : {deny_count}",
+                                        chat_id=self.chat_id, message_id=self.polling.message_id)
         edit_task = bot.edit_message_text(edit_msg, chat_id=self.chat_id,
                                           message_id=notice_message.message_id, parse_mode="HTML")
         reply_task = bot.reply_to(self.user_message, user_reply_msg)
@@ -268,14 +296,31 @@ class JoinRequest:
             request_task = bot.approve_chat_join_request(self.request.chat.id, self.request.from_user.id)
         else:
             request_task = bot.decline_chat_join_request(self.request.chat.id, self.request.from_user.id)
-        stop_poll_task = bot.stop_poll(self.request.chat.id, self.polling.message_id)
         try:
             await asyncio.gather(
                 edit_task,
                 reply_task,
                 request_task,
-                stop_poll_task
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
+        if self.PollButton is not None:
+            self.PollButton.stop_poll()
+        else:
+            try:
+                bot.stop_poll(self.request.chat.id, self.polling.message_id)
+            except Exception as e:
+                logger.error(f"Stop poll failed: {e}")
         await bot.delete_message(chat_id=self.chat_id, message_id=self.polling.message_id)
+
+    async def poll_button_handle(self, bot, callback_query: types.CallbackQuery):
+        if self.finished:
+            await bot.answer_callback_query(callback_query.id, "Poll has ended")
+            return
+        user_id = callback_query.from_user.id
+        try:
+            await bot.get_chat_member(self.chat_id, user_id)
+        except Exception:
+            await bot.answer_callback_query(callback_query.id, "You are not in this group")
+            return
+        await self.PollButton.user_poll_handle(bot, callback_query)

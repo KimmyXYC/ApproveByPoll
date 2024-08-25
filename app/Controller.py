@@ -3,6 +3,7 @@
 # @FileName: Controller.py
 # @Software: PyCharm
 # @GitHub: KimmyXYC
+import base64
 from asgiref.sync import sync_to_async
 from loguru import logger
 from telebot import types
@@ -49,8 +50,25 @@ class BotRunner(object):
             types.BotCommand("start_kick_vote", "Initiate a banishment"),
         ], scope=types.BotCommandScopeAllGroupChats())
 
-        @bot.message_handler(commands=["start", "help"], chat_types=['private'])
+        @bot.message_handler(commands=["start"], chat_types=['private'])
         async def handle_command(message: types.Message):
+            start_param = message.text.split(' ')[-1]
+            if start_param.startswith("getresult_"):
+                join_request_id = start_param.split("_")[-1]
+                join_request_id = base64.b64decode(join_request_id.encode()).decode()
+                if join_request_id in self.join_tasks:
+                    poll_result = self.join_tasks[join_request_id].get_poll_result(message)
+                    if poll_result is not None:
+                        await bot.reply_to(message, poll_result)
+                    else:
+                        await bot.reply_to(message, "Illegal requests")
+                else:
+                    await bot.reply_to(message, "Illegal requests")
+            else:
+                await Event.start(bot, message)
+
+        @bot.message_handler(commands=["help"], chat_types=['private'])
+        async def handle_command_help(message: types.Message):
             await Event.start(bot, message)
 
         @bot.message_handler(commands=["setting"], chat_types=['group', 'supergroup'])
@@ -144,6 +162,10 @@ class BotRunner(object):
                     return
                 ostracism_task = self.kick_tasks.get(ostracism_id)
                 await ostracism_task.handle_button(bot, callback_query, action, self.db)
+            elif requests_type == "PB":
+                request_id = callback_query.data.split()[2]
+                if request_id in self.join_tasks:
+                    await self.join_tasks[request_id].poll_button_handle(bot, callback_query)
             elif requests_type == "Setting":
                 await DashBoard.command_handler(bot, callback_query, self.db, self.bot_id)
 
