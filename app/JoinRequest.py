@@ -25,6 +25,7 @@ class JoinRequest:
         self.user_message = None
         self.notice_message = None
         self.polling = None
+        self.anonymous_vote = True
 
         self.user_mention = None
 
@@ -37,10 +38,8 @@ class JoinRequest:
     def get_poll_result(self, message):
         if self.PollButton is None:
             return None
-        allow_count, deny_count = self.PollButton.get_result(message.from_user.id)
-        if allow_count == -1:
-            return "Results are only available after voting"
-        return f"{self.request.chat.title}\nAllow : Deny = {allow_count} : {deny_count}"
+        return (f"<b>{self.request.chat.title}</b>\n\n"
+                f"{self.PollButton.get_result(message.from_user.id, self.anonymous_vote)}")
 
     async def handle_join_request(self, bot, request: types.ChatJoinRequest, db):
         self.LogChannel = LogChannel(bot, self.log_channel_id)
@@ -65,8 +64,8 @@ class JoinRequest:
             chat_dict = {}
         status_pin_msg = chat_dict.get("pin_msg", False)
         vote_time = chat_dict.get("vote_time", 600)
-        anonymous_vote = chat_dict.get("anonymous_vote", True)
         advanced_vote = chat_dict.get("advanced_vote", False)
+        self.anonymous_vote = chat_dict.get("anonymous_vote", True)
 
         # Time format
         minutes = vote_time // 60
@@ -132,7 +131,7 @@ class JoinRequest:
                 self.chat_id,
                 vote_question,
                 vote_options,
-                is_anonymous=anonymous_vote,
+                is_anonymous=self.anonymous_vote,
                 allows_multiple_answers=False,
                 reply_to_message_id=notice_message.message_id,
                 protect_content=True,

@@ -59,7 +59,7 @@ class BotRunner(object):
                 if join_request_id in self.join_tasks:
                     poll_result = self.join_tasks[join_request_id].get_poll_result(message)
                     if poll_result is not None:
-                        await bot.reply_to(message, poll_result)
+                        await bot.reply_to(message, poll_result, parse_mode="HTML")
                     else:
                         await bot.reply_to(message, "Illegal requests")
                 else:
