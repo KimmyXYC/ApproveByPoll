@@ -38,7 +38,8 @@ class JoinRequest:
     def get_poll_result(self, message):
         if self.PollButton is None:
             return None
-        return (f"<b>{self.request.chat.title}</b>\n\n"
+        return (f"<b>{self.request.chat.title}</b>\n"
+                f"Join request from {self.user_mention}\n\n"
                 f"{self.PollButton.get_result(message.from_user.id, self.anonymous_vote)}")
 
     async def handle_join_request(self, bot, request: types.ChatJoinRequest, db):
