@@ -319,7 +319,10 @@ class JoinRequest:
             return
         user_id = callback_query.from_user.id
         try:
-            await bot.get_chat_member(self.chat_id, user_id)
+            user_member = await bot.get_chat_member(self.chat_id, user_id)
+            if user_member.status not in ['administrator', 'creator', 'member']:
+                await bot.answer_callback_query(callback_query.id, "You are not in this group")
+                return
         except Exception:
             await bot.answer_callback_query(callback_query.id, "You are not in this group")
             return

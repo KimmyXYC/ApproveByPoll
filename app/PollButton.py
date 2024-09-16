@@ -60,7 +60,7 @@ class PollButton:
 
     def get_result(self, user_id, anonymous_vote=True):
         if user_id not in self.allow_list and user_id not in self.deny_list:
-            return -1, -1
+            return "You have not voted"
         info = f"Allow : Deny = {len(self.allow_list)} : {len(self.deny_list)}"
         if not anonymous_vote:
             info += "\n\n<b>Allow List:</b>\n"
