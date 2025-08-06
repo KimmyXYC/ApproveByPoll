@@ -166,7 +166,7 @@ class JoinRequest:
             deny_count = vote_message.options[1].voter_count
 
         # Process the vote result
-        if allow_count + deny_count == 0:
+        if allow_count + deny_count < 3:
             logger.info(f"{self.user_id}: No one voted in {self.chat_id}")
             result_message = bot.reply_to(notice_message, "No one voted.")
             approve_user = False
