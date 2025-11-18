@@ -15,7 +15,7 @@ class LogChannel:
         self.message_text = None
         self.message = None
 
-    async def create_log(self, request: types.ChatJoinRequest, log_type):
+    async def create_log(self, request: types.ChatJoinRequest, log_type, invite_link=None):
         mention = f'<a href="tg://user?id={request.from_user.id}">{request.from_user.first_name}'
         if request.from_user.last_name is not None:
             mention += f" {request.from_user.last_name}"
@@ -24,7 +24,9 @@ class LogChannel:
             f"#ApproveByPoll #{log_type}:\n"
             f"<b>Chat</b>: {request.chat.title}\n"
             f"<b>User</b>: {mention}\n"
-            f"<b>User ID</b>: <code>{request.from_user.id}</code>"
+            f"<b>User ID</b>: <code>{request.from_user.id}\n</code>"
+            f"<b>Invite Link</b>: <code>{invite_link}</code>\n"
+
         )
         message_text = self.message_text + "\n<b>Status</b>: Pending"
         try:

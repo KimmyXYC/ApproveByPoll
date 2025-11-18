@@ -58,7 +58,7 @@ class JoinRequest:
 
         # Log
         logger.info(f"New join request from {request.from_user.first_name}(ID: {self.user_id}) in {self.chat_id}")
-        await self.LogChannel.create_log(request, "JoinRequest")
+        await self.LogChannel.create_log(request, "JoinRequest", invite_link=self.request.chat.invite_link)
 
         chat_dict = db.get(str(self.chat_id))
         if chat_dict is None:
