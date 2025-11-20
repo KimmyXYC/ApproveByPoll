@@ -11,12 +11,10 @@ from app.PollButton import PollButton
 
 
 class JoinRequest:
-    def __init__(self, chat_id, user_id, bot_id, log_channel_id):
+    def __init__(self, chat_id, user_id, bot_id):
         self.chat_id = chat_id
         self.user_id = user_id
         self.finished = False
-
-        self.log_channel_id = log_channel_id
 
         self.bot_id = bot_id
         self.bot_member = None
@@ -43,7 +41,7 @@ class JoinRequest:
                 f"{self.PollButton.get_result(message.from_user.id, self.anonymous_vote)}")
 
     async def handle_join_request(self, bot, request: types.ChatJoinRequest, db):
-        self.LogChannel = LogChannel(bot, self.log_channel_id)
+        self.LogChannel = LogChannel(bot)
         self.request = request
         self.bot_member = await bot.get_chat_member(self.chat_id, self.bot_id)
 
@@ -58,7 +56,7 @@ class JoinRequest:
 
         # Log
         logger.info(f"New join request from {request.from_user.first_name}(ID: {self.user_id}) in {self.chat_id}")
-        await self.LogChannel.create_log(request, "JoinRequest", invite_link=self.request.chat.invite_link)
+        await self.LogChannel.create_log(request, "JoinRequest")
 
         chat_dict = db.get(str(self.chat_id))
         if chat_dict is None:

@@ -131,7 +131,7 @@ class BotRunner(object):
                 join_task = self.join_tasks[join_request_id]
                 if not join_task.check_up_status():
                     return
-            join_task = JoinRequest(request.chat.id, request.from_user.id, self.bot_id, self.log_channel)
+            join_task = JoinRequest(request.chat.id, request.from_user.id, self.bot_id)
             self.join_tasks[join_request_id] = join_task
             await join_task.handle_join_request(bot, request, self.db)
             try:

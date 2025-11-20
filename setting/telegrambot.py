@@ -24,6 +24,7 @@ class TelegramBot(BaseSettings):
     bot_id: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_ID")
     bot_username: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_USERNAME")
     log_channel: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_LOG_CHANNEL")
+    log_channel_topic: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_LOG_CHANNEL_TOPIC_ID")
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
